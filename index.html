@@ -64,48 +64,79 @@
     <p>Memuat konten...</p>
   </div>
 
-  <script>
-    const API_BASE="https://script.google.com/macros/s/AKfycbzpgdh4RbGx0G38QesDE5vYSBdKW1ikzNMFNfPGDN3rRKR8iLx5gpkY8BaeIxtJZRvUMA/exec";
+  <!-- Firebase + Firestore -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, where } 
+      from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    // Firebase config (dari project kamu)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
+      authDomain: "portal-berita-firebase.firebaseapp.com",
+      projectId: "portal-berita-firebase",
+      storageBucket: "portal-berita-firebase.firebasestorage.app",
+      messagingSenderId: "598254123187",
+      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6",
+      measurementId: "G-FZKQG25PJW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const themeToggle=document.getElementById("themeToggle");
-    if(themeToggle){themeToggle.addEventListener("click",()=>{document.body.classList.toggle("dark");localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";});if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}}
+    if(themeToggle){
+      themeToggle.addEventListener("click",()=>{
+        document.body.classList.toggle("dark");
+        localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
+        themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";
+      });
+      if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}
+    }
 
     function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
     function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
 
-    if(document.getElementById("contentList")){
-      loadPosts("Berita");
-      document.querySelectorAll("nav a").forEach(a=>{
-        a.addEventListener("click",e=>{
-          e.preventDefault();
-          document.querySelectorAll("nav a").forEach(x=>x.classList.remove("active"));
-          a.classList.add("active");
-          loadPosts(a.dataset.tab);
+    async function loadPosts(category){
+      showLoading();
+      try {
+        const q = query(
+          collection(db, "posts"),
+          where("category", "==", category),
+          orderBy("createdAt", "desc")
+        );
+        const snap = await getDocs(q);
+        hideLoading();
+        const c = document.getElementById("contentList");
+        c.innerHTML = "";
+        if (snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
+        snap.forEach(doc=>{
+          const d = doc.data();
+          c.innerHTML += `
+            <div class="card">
+              ${d.imageUrl?`<img src="${d.imageUrl}" class="thumb">`:""}
+              <h3>${d.title}</h3>
+              <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
+              <p>${d.content.substring(0,120)}...</p>
+              <a href="detail.html?id=${doc.id}" class="btn">Baca Selengkapnya</a>
+            </div>`;
         });
-      });
+      } catch(err){
+        hideLoading();
+        alert("Gagal memuat data: "+err.message);
+      }
     }
 
-    function loadPosts(category){
-      showLoading();
-      fetch(`${API_BASE}?action=getPosts&category=${category}`)
-        .then(r=>r.json())
-        .then(({ok,data})=>{
-          hideLoading();
-          const c=document.getElementById("contentList");
-          c.innerHTML="";
-          if(!ok||!data.length){c.innerHTML="<p>Tidak ada data.</p>";return;}
-          data.forEach(d=>{
-            c.innerHTML+=`
-              <div class="card">
-                ${d.GambarURL?`<img src="${d.GambarURL}" class="thumb">`:""}
-                <h3>${d.Judul}</h3>
-                <div class="date">${d.TanggalPost}</div>
-                <p>${d.Isi.substring(0,120)}...</p>
-                <a href="detail.html?id=${d.ID}" class="btn">Baca Selengkapnya</a>
-              </div>`;
-          });
-        })
-        .catch(()=>{hideLoading();alert("Gagal memuat data");});
-    }
+    // Default load + nav
+    loadPosts("Berita");
+    document.querySelectorAll("nav a").forEach(a=>{
+      a.addEventListener("click",e=>{
+        e.preventDefault();
+        document.querySelectorAll("nav a").forEach(x=>x.classList.remove("active"));
+        a.classList.add("active");
+        loadPosts(a.dataset.tab);
+      });
+    });
   </script>
 </body>
 </html>
