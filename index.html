@@ -33,13 +33,11 @@
     footer{text-align:center;padding:1rem;font-size:.9rem;opacity:.7;}
     @media(max-width:768px){header{flex-direction:column;gap:.6rem;text-align:center;}nav{justify-content:center;gap:.4rem;}nav a{font-size:.8rem;padding:.3rem .6rem;border-radius:8px;}}
 
-    /* Loading Overlay */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:500;color:#333;z-index:3000;}
     body.dark #loadingOverlay{background:rgba(18,18,18,.85);color:#eee;}
     .loader{border:4px solid #f3f3f3;border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:1rem;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
 
-    /* Modal Notifikasi */
     #customModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:4000;}
     .modal-box{background:var(--card-light);color:var(--text-light);padding:1.5rem;border-radius:16px;max-width:300px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);animation:fadeIn .3s ease;}
     body.dark .modal-box{background:var(--card-dark);color:var(--text-dark);}
@@ -65,13 +63,11 @@
 
   <footer>Hak Cipta © 2025 Portal Berita</footer>
 
-  <!-- Loading Overlay -->
   <div id="loadingOverlay">
     <div class="loader"></div>
     <p>Memuat konten...</p>
   </div>
 
-  <!-- Modal Notifikasi -->
   <div id="customModal">
     <div class="modal-box">
       <p id="modalMessage">Pesan notifikasi</p>
@@ -79,7 +75,6 @@
     </div>
   </div>
 
-  <!-- Firebase + Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy, where } 
@@ -91,8 +86,7 @@
       projectId: "portal-berita-firebase",
       storageBucket: "portal-berita-firebase.firebasestorage.app",
       messagingSenderId: "598254123187",
-      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6",
-      measurementId: "G-FZKQG25PJW"
+      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -110,15 +104,8 @@
 
     function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
     function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
-
-    // Modal
-    window.showModal=function(msg){
-      document.getElementById("modalMessage").textContent=msg;
-      document.getElementById("customModal").style.display="flex";
-    }
-    window.closeModal=function(){
-      document.getElementById("customModal").style.display="none";
-    }
+    window.showModal=function(msg){document.getElementById("modalMessage").textContent=msg;document.getElementById("customModal").style.display="flex";}
+    window.closeModal=function(){document.getElementById("customModal").style.display="none";}
 
     async function loadPosts(category){
       showLoading();
@@ -126,6 +113,7 @@
         const q = query(
           collection(db, "posts"),
           where("category", "==", category),
+          where("status", "==", "Aktif"), // ✅ hanya tampilkan yang aktif
           orderBy("createdAt", "desc")
         );
         const snap = await getDocs(q);
