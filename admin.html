@@ -211,8 +211,12 @@
     document.getElementById("loginBtn").onclick=async()=>{
       const email=document.getElementById("loginEmail").value;
       const pw=document.getElementById("loginPassword").value;
-      try{await signInWithEmailAndPassword(auth,email,pw);}
-      catch(err){document.getElementById("loginMsg").textContent="Login gagal: "+err.message;}
+      try{
+        await signInWithEmailAndPassword(auth,email,pw);
+      }
+      catch(err){
+        document.getElementById("loginMsg").textContent="Login gagal";
+      }
     };
 
     document.getElementById("logoutBtn").onclick=()=>signOut(auth);
@@ -221,31 +225,18 @@
     document.getElementById("searchAdmin").addEventListener("input",reloadList);
 
     async function reloadList(){
-      showLoading(true);
-      let q=collection(db,"posts");
-      const cat=document.getElementById("filterKategori").value;
-      if(cat) q=query(collection(db,"posts"),where("category","==",cat));
-      const snap=await getDocs(q);
-      showLoading(false);
-      const keyword=document.getElementById("searchAdmin").value.toLowerCase();
-      tbody.innerHTML="";
-      snap.forEach(docSnap=>{
-        const d=docSnap.data();
-        if(!(d.title.toLowerCase().includes(keyword)||d.content.toLowerCase().includes(keyword))) return;
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-            <div class="mt">
-              <a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
-              <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a> | 
-              <a class="danger" href="#" onclick="hapusRow('${docSnap.id}');return false;">Hapus</a>
-            </div></td>
-          <td data-label="Kategori">${d.category}</td>
-          <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
-          <td data-label="Status"><span class="tag">${d.status}</span></td>
-          <td data-label="Gambar">${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
-        tbody.appendChild(tr);
-      });
+      try{
+        showLoading(true);
+        let q=collection(db,"posts");
+        const cat=document.getElementById("filterKategori").value;
+        if(cat) q=query(collection(db,"posts"),where("category","==",cat));
+        const snap=await getDocs(q);
+        showLoading(false);
+        ...
+      }catch(err){
+        showPopup("Gagal memuat data");
+      }
+    }
     }
 
     window.editRow=async(id)=>{
@@ -288,24 +279,16 @@
     }
 
     async function submitForm(){
-      const title=document.getElementById("fJudul").value.trim();
-      const category=document.getElementById("fKategori").value;
-      const content=document.getElementById("fIsi").value.trim();
-      const status=document.getElementById("fStatus").value;
-      const slug=document.getElementById("fSlug").value.trim();
-      let imageUrl=document.getElementById("fGambarURL").value.trim();
-
-      const file=document.getElementById("fFile").files[0];
-      if(file){
-        const formData=new FormData();
-        formData.append("file",file);
-        formData.append("upload_preset",UPLOAD_PRESET);
-        showLoading(true);
-        const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{method:"POST",body:formData});
-        const data=await res.json();
-        showLoading(false);
-        if(data.secure_url){imageUrl=data.secure_url;document.getElementById("fGambarURL").value=imageUrl;}
+      ...
+      try{
+        if(EDIT_ID){await updateDoc(doc(db,"posts",EDIT_ID),payload);}
+        else{await addDoc(collection(db,"posts"),payload);}
+        document.getElementById("formMsg").textContent="Tersimpan ✓";
+        resetForm();reloadList();
+      }catch(err){
+        document.getElementById("formMsg").textContent="Gagal menyimpan";
       }
+    }
 
       const payload={title,category,content,status,slug,imageUrl,createdAt:serverTimestamp(),author:auth.currentUser.email};
 
