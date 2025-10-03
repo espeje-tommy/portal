@@ -1,4 +1,72 @@
 <!DOCTYPE html>
 <html lang="id">
-<!-- ... (isi final detail.html dari jawaban sebelumnya) ... -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Berita</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;font-family:'Poppins',sans-serif;background:#f9f9fb;color:#222;}
+    header{padding:1rem;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:0;}
+    header a{text-decoration:none;color:#000;font-weight:600;background:linear-gradient(135deg,#ffd84d,#f7b500);padding:.4rem .8rem;border-radius:20px;}
+    main{max-width:960px;margin:1rem auto;padding:0 1rem;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(0,0,0,.05);padding:1rem;}
+    .detail-img{max-width:700px;max-height:400px;object-fit:cover;width:100%;border-radius:12px;margin-bottom:1rem;cursor:zoom-in;}
+    h2{margin-top:.5rem;}
+    .date{color:#666;font-size:.9rem;margin-bottom:.6rem;}
+    #lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;justify-content:center;align-items:center;z-index:2000;}
+    #lightbox img{max-width:90%;max-height:90%;border-radius:12px;}
+    #closeBtn{position:absolute;top:20px;right:20px;background:#fff;border:none;padding:.4rem .8rem;border-radius:50%;cursor:pointer;font-weight:bold;}
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:4000;}
+    .popup.hidden{display:none;}
+    .popup-box{background:#fff;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:320px;text-align:center;}
+    .popup-actions{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;}
+    .popup-actions button{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;background:#f7b500;}
+  </style>
+</head>
+<body>
+  <header><a href="index.html">⬅ Kembali</a></header>
+  <main><div id="detailContainer"></div></main>
+
+  <div id="lightbox"><button id="closeBtn">×</button><img id="lightboxImg"></div>
+  <div id="customPopup" class="popup hidden"><div class="popup-box"><p id="popupMessage"></p><div class="popup-actions" id="popupActions"></div></div></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",authDomain:"portal-berita-firebase.firebaseapp.com",projectId:"portal-berita-firebase",storageBucket:"portal-berita-firebase.firebasestorage.app",messagingSenderId:"598254123187",appId:"1:598254123187:web:9418bcbe0a00dda3c3d8c6"};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function showPopup(msg){
+      const p=document.getElementById("customPopup");
+      document.getElementById("popupMessage").textContent=msg;
+      document.getElementById("popupActions").innerHTML='<button onclick="document.getElementById(`customPopup`).classList.add(`hidden`)">OK</button>';
+      p.classList.remove("hidden");
+    }
+
+    async function loadDetail(){
+      const id=new URLSearchParams(window.location.search).get("id");
+      if(!id){showPopup("Gagal memuat detail");return;}
+      try{
+        const snap=await getDoc(doc(db,"posts",id));
+        if(!snap.exists()){showPopup("Gagal memuat detail");return;}
+        const d=snap.data();
+        if(d.status!=="Aktif"){showPopup("Berita tidak tersedia");return;}
+        document.getElementById("detailContainer").innerHTML=`
+          <div class="card">
+            ${d.imageUrl?`<img src="${d.imageUrl}" class="detail-img" onclick="showLightbox(this.src)">`:""}
+            <h2>${d.title}</h2>
+            <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
+            <p>${d.content.replace(/\n/g,"<br>")}</p>
+          </div>`;
+      }catch(err){showPopup("Gagal memuat detail");}
+    }
+    loadDetail();
+
+    window.showLightbox=(src)=>{document.getElementById("lightboxImg").src=src;document.getElementById("lightbox").style.display="flex";};
+    document.getElementById("closeBtn").onclick=()=>{document.getElementById("lightbox").style.display="none";};
+  </script>
+</body>
 </html>
