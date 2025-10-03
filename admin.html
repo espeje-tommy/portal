@@ -41,7 +41,11 @@
       .row{grid-template-columns:1fr;}
       #loginCard{margin:20vh 1rem;}
       header h1{font-size:1rem;}
-      table{font-size:.8rem;}
+      table, thead, tbody, th, td, tr {display:block;}
+      thead{display:none;}
+      tr{margin-bottom:1rem;border:1px solid #eee;border-radius:12px;padding:.5rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+      td{border:none;padding:.3rem 0;}
+      td::before{content:attr(data-label);font-weight:600;display:block;color:#444;margin-bottom:.2rem;}
       .right{justify-content:center;}
     }
 
@@ -141,7 +145,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -200,12 +204,13 @@
         const d=docSnap.data();
         const tr=document.createElement("tr");
         tr.innerHTML=`
-          <td><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-          <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
-          <td>${d.category}</td>
-          <td>${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
-          <td><span class="tag">${d.status}</span></td>
-          <td>${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
+          <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
+            <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
+            <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
+          <td data-label="Kategori">${d.category}</td>
+          <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
+          <td data-label="Status"><span class="tag">${d.status}</span></td>
+          <td data-label="Gambar">${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
         tbody.appendChild(tr);
       });
     }
