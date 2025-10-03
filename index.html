@@ -18,12 +18,14 @@
     h3 {margin:.2rem 0;}
     .date {color:#666;font-size:.85rem;margin-bottom:.5rem;}
     .btn {display:inline-block;background:linear-gradient(135deg,#ffd84d,#f7b500);color:#000;padding:.4rem .8rem;border-radius:20px;text-decoration:none;font-weight:600;font-size:.9rem;}
-    /* Popup custom */
-    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:4000;}
-    .popup.hidden{display:none;}
-    .popup-box{background:#fff;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:320px;text-align:center;}
-    .popup-actions{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;}
-    .popup-actions button{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;background:#f7b500;}
+    /* === popup custom === */
+    .fb01-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:9999}
+    .fb01-overlay.active{display:flex}
+    .fb01-box{background:#fff;max-width:340px;width:90%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;color:inherit}
+    .fb01-box p{margin:0;font-size:14px;line-height:1.5}
+    .fb01-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+    .fb01-btn{border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600}
+    .fb01-ok{background:#f7b500;color:#000}
   </style>
 </head>
 <body>
@@ -38,11 +40,11 @@
 
   <main><div id="contentList"></div></main>
 
-  <!-- Popup custom -->
-  <div id="customPopup" class="popup hidden">
-    <div class="popup-box">
-      <p id="popupMessage"></p>
-      <div class="popup-actions" id="popupActions"></div>
+  <!-- popup -->
+  <div id="fb01Popup" class="fb01-overlay" aria-hidden="true">
+    <div class="fb01-box">
+      <p id="fb01Msg"></p>
+      <div class="fb01-actions" id="fb01Actions"></div>
     </div>
   </div>
 
@@ -61,11 +63,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    function showPopup(msg){
-      const p=document.getElementById("customPopup");
-      document.getElementById("popupMessage").textContent=msg;
-      document.getElementById("popupActions").innerHTML='<button onclick="document.getElementById(`customPopup`).classList.add(`hidden`)">OK</button>';
-      p.classList.remove("hidden");
+    function fb01Alert(msg){
+      const overlay=document.getElementById('fb01Popup');
+      document.getElementById('fb01Msg').textContent=msg;
+      document.getElementById('fb01Actions').innerHTML='<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">OK</button>';
+      overlay.classList.add('active');
     }
 
     async function loadPosts(category){
@@ -86,7 +88,7 @@
               <a href="detail.html?id=${doc.id}" class="btn">Baca Selengkapnya</a>
             </div>`;
         });
-      }catch(err){showPopup("Gagal memuat data");}
+      }catch(err){fb01Alert("Gagal memuat data");}
     }
 
     document.querySelectorAll("nav a").forEach(a=>{
