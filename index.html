@@ -7,128 +7,175 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-light:#f9f9fb; --bg-dark:#121212;
-      --text-light:#222; --text-dark:#eee;
-      --card-light:#fff; --card-dark:#1e1e1e;
+      --bg-light:#f9f9fb;
+      --bg-dark:#121212;
+      --text-light:#222;
+      --text-dark:#eee;
+      --card-light:#fff;
+      --card-dark:#1e1e1e;
       --accent:#f7b500;
       --accent-gradient:linear-gradient(135deg,#ffd84d,#f7b500);
     }
-    body {margin:0;font-family:'Poppins',sans-serif;background:var(--bg-light);color:var(--text-light);transition:.3s;}
-    body.dark {background:var(--bg-dark);color:var(--text-dark);}
-    header {display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;backdrop-filter:blur(12px);background:rgba(255,255,255,.7);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(0,0,0,.05);}
-    body.dark header{background:rgba(18,18,18,.8);border-bottom:1px solid rgba(255,255,255,.1);}
-    nav{display:flex;gap:.8rem;}
-    nav a{padding:.4rem 1rem;border-radius:12px;font-weight:500;text-decoration:none;color:inherit;}
-    nav a.active,nav a:hover{background:var(--accent);color:#000;}
-    .theme-toggle{position:fixed;top:12px;right:12px;z-index:2000;background:var(--card-light);border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);}
-    body.dark .theme-toggle{background:var(--card-dark);color:#fff;}
-    main{padding:1.5rem;max-width:800px;margin:auto;}
-    .card{background:var(--card-light);margin-bottom:1.2rem;border-radius:18px;padding:1.2rem;box-shadow:0 4px 12px rgba(0,0,0,.05);}
-    body.dark .card{background:var(--card-dark);}
-    .card h2,.card h3{margin:.3rem 0;}
-    .date{font-size:.85rem;color:#777;margin-bottom:.6rem;} body.dark .date{color:#aaa;}
-    .btn{display:inline-block;padding:.55rem 1.2rem;border-radius:14px;background:var(--accent-gradient);color:#000;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25);transition:transform .2s;}
-    .btn:hover{transform:scale(1.05);}
-    .thumb{width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:.8rem;}
-    footer{text-align:center;padding:1rem;font-size:.9rem;opacity:.7;}
-    @media(max-width:768px){header{flex-direction:column;gap:.6rem;text-align:center;}nav{justify-content:center;gap:.4rem;}nav a{font-size:.8rem;padding:.3rem .6rem;border-radius:8px;}}
+    body {
+      margin:0;
+      font-family:'Poppins',sans-serif;
+      background:var(--bg-light);
+      color:var(--text-light);
+    }
+    header {
+      padding:1rem;
+      background:#fff;
+      border-bottom:1px solid #ddd;
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    h1 {margin:0;font-size:1.3rem;}
+    nav {
+      display:flex;
+      gap:1rem;
+      margin-top:.5rem;
+    }
+    nav a {
+      text-decoration:none;
+      color:#555;
+      font-weight:500;
+      padding:.3rem .6rem;
+      border-radius:8px;
+    }
+    nav a.active {
+      background:var(--accent);
+      color:#000;
+    }
+    main {max-width:960px;margin:1rem auto;padding:0 1rem;}
+    .card {
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+      margin-bottom:1rem;
+      padding:1rem;
+    }
+    .thumb {
+      max-height:180px;
+      width:100%;
+      object-fit:cover;
+      border-radius:12px;
+      margin-bottom:.6rem;
+    }
+    h3 {margin:.2rem 0;}
+    .date {color:#666;font-size:.85rem;margin-bottom:.5rem;}
+    .btn {
+      display:inline-block;
+      background:var(--accent-gradient);
+      color:#000;
+      padding:.4rem .8rem;
+      border-radius:20px;
+      text-decoration:none;
+      font-weight:600;
+      font-size:.9rem;
+    }
+    #searchBox {
+      padding:.5rem;
+      border-radius:12px;
+      border:1px solid #ccc;
+      font-family:inherit;
+    }
 
-    /* Loading Overlay */
-    #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:500;color:#333;z-index:3000;}
-    body.dark #loadingOverlay{background:rgba(18,18,18,.85);color:#eee;}
-    .loader{border:4px solid #f3f3f3;border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:1rem;}
-    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    /* Custom popup */
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:4000;}
+    .popup.hidden{display:none;}
+    .popup-box{background:#fff;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:320px;text-align:center;}
+    .popup-actions{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;}
+    .popup-actions button{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;background:var(--accent);}
   </style>
 </head>
 <body>
   <header>
-    <h2><a href="index.html" style="text-decoration:none;color:inherit;">Portal Berita</a></h2>
+    <h1>Portal Berita</h1>
     <nav>
-      <a href="#" class="active" data-tab="Berita">Berita</a>
+      <a href="#" data-tab="Berita" class="active">Berita</a>
       <a href="#" data-tab="Pengumuman">Pengumuman</a>
       <a href="#" data-tab="Peraturan">Peraturan</a>
     </nav>
+    <div style="margin-top:.6rem;">
+      <input type="text" id="searchBox" placeholder="Cari...">
+    </div>
   </header>
-
-  <button class="theme-toggle" id="themeToggle">☀️</button>
 
   <main>
     <div id="contentList"></div>
   </main>
 
-  <footer>Hak Cipta © 2025 Portal Berita</footer>
-
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay">
-    <div class="loader"></div>
-    <p>Memuat konten...</p>
+  <!-- Custom Popup -->
+  <div id="customPopup" class="popup hidden">
+    <div class="popup-box">
+      <p id="popupMessage"></p>
+      <div class="popup-actions" id="popupActions"></div>
+    </div>
   </div>
 
-  <!-- Firebase + Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, where } 
-      from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    // Firebase config (dari project kamu)
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
       authDomain: "portal-berita-firebase.firebaseapp.com",
       projectId: "portal-berita-firebase",
       storageBucket: "portal-berita-firebase.firebasestorage.app",
       messagingSenderId: "598254123187",
-      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6",
-      measurementId: "G-FZKQG25PJW"
+      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const themeToggle=document.getElementById("themeToggle");
-    if(themeToggle){
-      themeToggle.addEventListener("click",()=>{
-        document.body.classList.toggle("dark");
-        localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
-        themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";
-      });
-      if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}
+    // Custom Popup
+    function showPopup(msg){
+      const p=document.getElementById("customPopup");
+      document.getElementById("popupMessage").textContent=msg;
+      document.getElementById("popupActions").innerHTML='<button onclick="document.getElementById(`customPopup`).classList.add(`hidden`)">OK</button>';
+      p.classList.remove("hidden");
     }
 
-    function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
-    function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
-
     async function loadPosts(category){
-      showLoading();
-      try {
-        const q = query(
-          collection(db, "posts"),
-          where("category", "==", category),
-          orderBy("createdAt", "desc")
+      try{
+        const q=query(
+          collection(db,"posts"),
+          where("category","==",category),
+          where("status","==","Aktif"),
+          orderBy("createdAt","desc")
         );
-        const snap = await getDocs(q);
-        hideLoading();
-        const c = document.getElementById("contentList");
-        c.innerHTML = "";
-        if (snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
-        snap.forEach(doc=>{
-          const d = doc.data();
-          c.innerHTML += `
-            <div class="card">
-              ${d.imageUrl?`<img src="${d.imageUrl}" class="thumb">`:""}
-              <h3>${d.title}</h3>
-              <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
-              <p>${d.content.substring(0,120)}...</p>
-              <a href="detail.html?id=${doc.id}" class="btn">Baca Selengkapnya</a>
-            </div>`;
-        });
-      } catch(err){
-        hideLoading();
-        alert("Gagal memuat data: "+err.message);
+        const snap=await getDocs(q);
+        const c=document.getElementById("contentList");
+        c.innerHTML="";
+        if(snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
+        let data=[];
+        snap.forEach(doc=>{data.push({id:doc.id,...doc.data()});});
+        renderPosts(data);
+      }catch(err){
+        showPopup("Gagal memuat data");
       }
     }
 
-    // Default load + nav
-    loadPosts("Berita");
+    function renderPosts(data){
+      const c=document.getElementById("contentList");
+      const keyword=document.getElementById("searchBox").value.toLowerCase();
+      c.innerHTML="";
+      data.filter(d=>d.title.toLowerCase().includes(keyword)||d.content.toLowerCase().includes(keyword))
+          .forEach(d=>{
+            c.innerHTML+=`
+              <div class="card">
+                ${d.imageUrl?`<img src="${d.imageUrl}" class="thumb">`:""}
+                <h3>${d.title}</h3>
+                <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
+                <p>${d.content.substring(0,120)}...</p>
+                <a href="detail.html?id=${d.id}" class="btn">Baca Selengkapnya</a>
+              </div>`;
+          });
+    }
+
+    // Event
     document.querySelectorAll("nav a").forEach(a=>{
       a.addEventListener("click",e=>{
         e.preventDefault();
@@ -137,6 +184,10 @@
         loadPosts(a.dataset.tab);
       });
     });
+    document.getElementById("searchBox").addEventListener("input",()=>loadPosts(document.querySelector("nav a.active").dataset.tab));
+
+    // Load pertama
+    loadPosts("Berita");
   </script>
 </body>
 </html>
