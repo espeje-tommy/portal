@@ -153,7 +153,9 @@
         let data=[];
         snap.forEach(doc=>{data.push({id:doc.id,...doc.data()});});
         renderPosts(data);
-      }catch(err){showPopup("Gagal memuat data: "+err.message);}
+      }catch(err){
+        showPopup("Gagal memuat data");
+      }
     }
 
     function renderPosts(data){
