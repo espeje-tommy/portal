@@ -29,13 +29,9 @@
     .danger{color:#b00020;cursor:pointer;}
     .hidden{display:none;}
     .mt{margin-top:.6rem;}
-
-    /* LOGIN */
     #loginCard{max-width:400px;margin:15vh auto;text-align:center;padding:2rem;}
     #loginCard input{text-align:center;font-size:1rem;}
     #loginBtn{margin-top:1rem;width:100%;}
-
-    /* RESPONSIVE */
     @media(max-width:600px){
       .row{grid-template-columns:1fr;}
       #loginCard{margin:20vh 1rem;}
@@ -43,18 +39,18 @@
       table{font-size:.8rem;}
       .right{justify-content:center;}
     }
-
-    /* LOADING */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;justify-content:center;align-items:center;z-index:3000;}
     .spinner{width:50px;height:50px;border:4px solid #ddd;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-
-    /* Popup custom */
-    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:4000;}
-    .popup.hidden{display:none;}
-    .popup-box{background:#fff;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:320px;text-align:center;}
-    .popup-actions{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;}
-    .popup-actions button{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;background:#f7b500;}
+    /* === popup custom === */
+    .fb01-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:9999}
+    .fb01-overlay.active{display:flex}
+    .fb01-box{background:#fff;max-width:340px;width:90%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;color:inherit}
+    .fb01-box p{margin:0;font-size:14px;line-height:1.5}
+    .fb01-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+    .fb01-btn{border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600}
+    .fb01-ok{background:#f7b500;color:#000}
+    .fb01-cancel{background:#efefef;color:#000}
   </style>
 </head>
 <body>
@@ -86,10 +82,8 @@
           </select>
         </div>
       </div>
-
       <label>Isi Konten</label>
       <textarea id="fIsi" placeholder="Tulis isi lengkap di sini..."></textarea>
-
       <div class="row">
         <div>
           <label>Upload Gambar</label>
@@ -100,7 +94,6 @@
           <input type="text" id="fGambarURL" placeholder="Otomatis terisi setelah upload">
         </div>
       </div>
-
       <div class="row">
         <div>
           <label>Status</label>
@@ -111,7 +104,6 @@
           <input type="text" id="fSlug" placeholder="contoh-judul-berita">
         </div>
       </div>
-
       <div class="right mt">
         <button class="btn secondary" id="resetBtn">Bersihkan</button>
         <button class="btn" id="saveBtn">Simpan</button>
@@ -122,9 +114,7 @@
 
     <!-- LIST -->
     <div id="listCard" class="card hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
-        <h3>Daftar Konten</h3>
-      </div>
+      <h3>Daftar Konten</h3>
       <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik.</div>
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
@@ -137,10 +127,10 @@
   <div id="loadingOverlay"><div class="spinner"></div></div>
 
   <!-- Popup -->
-  <div id="customPopup" class="popup hidden">
-    <div class="popup-box">
-      <p id="popupMessage"></p>
-      <div class="popup-actions" id="popupActions"></div>
+  <div id="fb01Popup" class="fb01-overlay" aria-hidden="true">
+    <div class="fb01-box">
+      <p id="fb01Msg"></p>
+      <div class="fb01-actions" id="fb01Actions"></div>
     </div>
   </div>
 
@@ -148,7 +138,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
@@ -169,22 +159,24 @@
     const formCard=document.getElementById("formCard");
     const listCard=document.getElementById("listCard");
     const tbody=document.getElementById("tbody");
-
     let EDIT_ID=null;
 
     function showLoading(on=true){document.getElementById("loadingOverlay").style.display=on?"flex":"none";}
 
-    function showPopup(msg,confirm=false,callback=null){
-      const p=document.getElementById("customPopup");
-      document.getElementById("popupMessage").textContent=msg;
-      if(confirm){
-        document.getElementById("popupActions").innerHTML=`
-          <button onclick="document.getElementById('customPopup').classList.add('hidden');(${callback})(true)">Ya</button>
-          <button onclick="document.getElementById('customPopup').classList.add('hidden');(${callback})(false)">Batal</button>`;
-      }else{
-        document.getElementById("popupActions").innerHTML='<button onclick="document.getElementById(`customPopup`).classList.add(`hidden`)">OK</button>';
-      }
-      p.classList.remove("hidden");
+    // === popup helper ===
+    function fb01Alert(msg){
+      const overlay=document.getElementById('fb01Popup');
+      document.getElementById('fb01Msg').textContent=msg;
+      document.getElementById('fb01Actions').innerHTML='<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">OK</button>';
+      overlay.classList.add('active');
+    }
+    function fb01Confirm(msg,callback){
+      const overlay=document.getElementById('fb01Popup');
+      document.getElementById('fb01Msg').textContent=msg;
+      document.getElementById('fb01Actions').innerHTML=
+        '<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+callback+')(true)">Ya</button>'+
+        '<button class="fb01-btn fb01-cancel" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+callback+')(false)">Batal</button>';
+      overlay.classList.add('active');
     }
 
     onAuthStateChanged(auth,(user)=>{
@@ -205,8 +197,7 @@
 
     async function reloadList(){
       showLoading(true);
-      let q=collection(db,"posts");
-      const snap=await getDocs(q);
+      const snap=await getDocs(collection(db,"posts"));
       showLoading(false);
       tbody.innerHTML="";
       snap.forEach(docSnap=>{
@@ -241,7 +232,7 @@
     };
 
     window.arsipkan=(id)=>{
-      showPopup("Arsipkan item ini?",true,async(ok)=>{if(ok){await updateDoc(doc(db,"posts",id),{status:"Arsip"});reloadList();}});
+      fb01Confirm("Arsipkan item ini?",async(ok)=>{if(ok){await updateDoc(doc(db,"posts",id),{status:"Arsip"});reloadList();}});
     };
 
     function resetForm(){
