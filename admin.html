@@ -53,16 +53,6 @@
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;justify-content:center;align-items:center;z-index:3000;}
     .spinner{width:50px;height:50px;border:4px solid #ddd;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-
-    /* POPUP */
-    .fb01-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:5000}
-    .fb01-overlay.active{display:flex}
-    .fb01-box{background:#fff;max-width:340px;width:90%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;color:inherit;text-align:center;}
-    .fb01-box p{margin:0;font-size:14px;line-height:1.5}
-    .fb01-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
-    .fb01-btn{border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600}
-    .fb01-ok{background:#f7b500;color:#000}
-    .fb01-cancel{background:#efefef;color:#000}
   </style>
 </head>
 <body>
@@ -102,6 +92,7 @@
         <div>
           <label>Upload Gambar</label>
           <input type="file" id="fFile" accept="image/*">
+          <div class="muted">Jika diunggah, otomatis tersimpan ke Cloudinary.</div>
         </div>
         <div>
           <label>GambarURL</label>
@@ -150,21 +141,14 @@
   <!-- LOADING -->
   <div id="loadingOverlay"><div class="spinner"></div></div>
 
-  <!-- POPUP -->
-  <div id="fb01Popup" class="fb01-overlay" aria-hidden="true">
-    <div class="fb01-box">
-      <p id="fb01Msg"></p>
-      <div class="fb01-actions" id="fb01Actions"></div>
-    </div>
-  </div>
-
   <!-- FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    const firebaseConfig = { /* ... sama seperti sebelumnya ... */ 
+    // Firebase Config
+    const firebaseConfig = {
       apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
       authDomain: "portal-berita-firebase.firebaseapp.com",
       projectId: "portal-berita-firebase",
@@ -189,22 +173,6 @@
 
     function showLoading(on=true){document.getElementById("loadingOverlay").style.display=on?"flex":"none";}
 
-    // Popup helpers
-    function fb01Alert(msg){
-      const overlay=document.getElementById("fb01Popup");
-      document.getElementById("fb01Msg").textContent=msg;
-      document.getElementById("fb01Actions").innerHTML='<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">OK</button>';
-      overlay.classList.add("active");
-    }
-    function fb01Confirm(msg,onYes){
-      const overlay=document.getElementById("fb01Popup");
-      document.getElementById("fb01Msg").textContent=msg;
-      document.getElementById("fb01Actions").innerHTML=
-        '<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+onYes+')()">Ya</button>'+
-        '<button class="fb01-btn fb01-cancel" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">Batal</button>';
-      overlay.classList.add("active");
-    }
-
     // Auth state
     onAuthStateChanged(auth,(user)=>{
       if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}
@@ -215,11 +183,13 @@
       const email=document.getElementById("loginEmail").value;
       const pw=document.getElementById("loginPassword").value;
       try{await signInWithEmailAndPassword(auth,email,pw);}
-      catch(err){document.getElementById("loginMsg").textContent="Login gagal";}
+      catch(err){document.getElementById("loginMsg").textContent="Login gagal: "+err.message;}
     };
 
     document.getElementById("logoutBtn").onclick=()=>signOut(auth);
+
     document.getElementById("resetBtn").onclick=()=>resetForm();
+
     document.getElementById("saveBtn").onclick=()=>submitForm();
 
     async function reloadList(){
@@ -262,8 +232,10 @@
       window.scrollTo({top:0,behavior:"smooth"});
     };
 
-    window.arsipkan=(id)=>{
-      fb01Confirm("Arsipkan item ini?", async ()=>{await updateDoc(doc(db,"posts",id),{status:"Arsip"});reloadList();});
+    window.arsipkan=async(id)=>{
+      if(!confirm("Arsipkan item ini?"))return;
+      await updateDoc(doc(db,"posts",id),{status:"Arsip"});
+      reloadList();
     };
 
     function resetForm(){
@@ -303,7 +275,7 @@
         else{await addDoc(collection(db,"posts"),payload);}
         document.getElementById("formMsg").textContent="Tersimpan ✓";
         resetForm();reloadList();
-      }catch(err){document.getElementById("formMsg").textContent="Gagal menyimpan";}
+      }catch(err){document.getElementById("formMsg").textContent="Gagal menyimpan: "+err.message;}
     }
   </script>
 </body>
