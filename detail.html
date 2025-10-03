@@ -24,8 +24,6 @@
     #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;justify-content:center;align-items:center;z-index:2000;}
     #lightbox img{max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.5);}
     #closeBtn{position:absolute;top:20px;right:30px;font-size:2rem;font-weight:bold;color:#fff;cursor:pointer;z-index:2100;}
-
-    /* Loading Overlay */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:500;color:#333;z-index:3000;}
     body.dark #loadingOverlay{background:rgba(18,18,18,.85);color:#eee;}
     .loader{border:4px solid #f3f3f3;border-top:4px solid var(--accent);border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:1rem;}
@@ -56,34 +54,63 @@
     <p>Memuat konten...</p>
   </div>
 
-  <script>
-    const API_BASE="https://script.google.com/macros/s/AKfycbzpgdh4RbGx0G38QesDE5vYSBdKW1ikzNMFNfPGDN3rRKR8iLx5gpkY8BaeIxtJZRvUMA/exec";
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } 
+      from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
+      authDomain: "portal-berita-firebase.firebaseapp.com",
+      projectId: "portal-berita-firebase",
+      storageBucket: "portal-berita-firebase.firebasestorage.app",
+      messagingSenderId: "598254123187",
+      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6",
+      measurementId: "G-FZKQG25PJW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const themeToggle=document.getElementById("themeToggle");
-    if(themeToggle){themeToggle.addEventListener("click",()=>{document.body.classList.toggle("dark");localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";});if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}}
+    if(themeToggle){
+      themeToggle.addEventListener("click",()=>{
+        document.body.classList.toggle("dark");
+        localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
+        themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";
+      });
+      if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}
+    }
 
     function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
     function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
 
-    if(document.getElementById("detailContainer")){
+    async function loadDetail(){
       const id=new URLSearchParams(window.location.search).get("id");
+      if(!id){document.getElementById("detailContainer").innerHTML="❌ Tidak ada ID berita.";return;}
       showLoading();
-      fetch(`${API_BASE}?action=getDetail&id=${id}`)
-        .then(r=>r.json())
-        .then(({ok,data})=>{
-          hideLoading();
-          if(!ok) return;
-          document.getElementById("detailContainer").innerHTML=`
-            <div class="card">
-              ${data.GambarURL?`<img src="${data.GambarURL}" class="detail-img" onclick="showLightbox(this.src)">`:""}
-              <h2>${data.Judul}</h2>
-              <div class="date">${data.TanggalPost}</div>
-              <p>${data.Isi.replace(/\n/g,"<br>")}</p>
-            </div>`;
-        })
-        .catch(()=>{hideLoading();alert("Gagal memuat detail");});
+      try {
+        const snap = await getDoc(doc(db,"posts",id));
+        hideLoading();
+        if(!snap.exists()){document.getElementById("detailContainer").innerHTML="❌ Berita tidak ditemukan.";return;}
+        const d = snap.data();
+        document.getElementById("detailContainer").innerHTML=`
+          <div class="card">
+            ${d.imageUrl?`<img src="${d.imageUrl}" class="detail-img" onclick="showLightbox(this.src)">`:""}
+            <h2>${d.title}</h2>
+            <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
+            <p>${d.content.replace(/\n/g,"<br>")}</p>
+          </div>`;
+      } catch(err){
+        hideLoading();
+        alert("Gagal memuat detail: "+err.message);
+      }
     }
 
-    function showLightbox(src){
+    loadDetail();
+
+    window.showLightbox=function(src){
       document.getElementById('lightbox-img').src=src;
       document.getElementById('lightbox').style.display='flex';
     }
