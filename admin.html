@@ -36,7 +36,7 @@
     #loginCard input{text-align:center;font-size:1rem;}
     #loginBtn{margin-top:1rem;width:100%;}
 
-    /* RESPONSIVE */
+    /* RESPONSIVE: table jadi card */
     @media(max-width:600px){
       .row{grid-template-columns:1fr;}
       #loginCard{margin:20vh 1rem;}
@@ -53,6 +53,13 @@
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;justify-content:center;align-items:center;z-index:3000;}
     .spinner{width:50px;height:50px;border:4px solid #ddd;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+    /* Custom popup */
+    .popup{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:4000;}
+    .popup.hidden{display:none;}
+    .popup-box{background:#fff;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:340px;text-align:center;}
+    .popup-actions{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;}
+    .popup-actions button{padding:.5rem 1rem;border:none;border-radius:8px;cursor:pointer;background:var(--accent);}
   </style>
 </head>
 <body>
@@ -92,7 +99,6 @@
         <div>
           <label>Upload Gambar</label>
           <input type="file" id="fFile" accept="image/*">
-          <div class="muted">Jika diunggah, otomatis tersimpan ke Cloudinary.</div>
         </div>
         <div>
           <label>GambarURL</label>
@@ -121,7 +127,7 @@
 
     <!-- LIST -->
     <div id="listCard" class="card hidden">
-      <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;">
         <h3>Daftar Konten</h3>
         <select id="filterKategori">
           <option value="">Semua</option>
@@ -130,7 +136,8 @@
           <option>Peraturan</option>
         </select>
       </div>
-      <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik.</div>
+      <input type="text" id="searchAdmin" placeholder="Cari..." style="padding:.5rem;border-radius:12px;border:1px solid #ccc;margin:.5rem 0;width:100%;">
+      <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik. "Hapus" untuk menghapus permanen.</div>
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
         <tbody id="tbody"></tbody>
@@ -141,11 +148,19 @@
   <!-- LOADING -->
   <div id="loadingOverlay"><div class="spinner"></div></div>
 
+  <!-- Custom Popup -->
+  <div id="customPopup" class="popup hidden">
+    <div class="popup-box">
+      <p id="popupMessage"></p>
+      <div class="popup-actions" id="popupActions"></div>
+    </div>
+  </div>
+
   <!-- FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -173,6 +188,20 @@
 
     function showLoading(on=true){document.getElementById("loadingOverlay").style.display=on?"flex":"none";}
 
+    // Custom Popup
+    function showPopup(msg,actions=[{label:"OK",callback:()=>closePopup()}]){
+      const p=document.getElementById("customPopup");
+      document.getElementById("popupMessage").textContent=msg;
+      const a=document.getElementById("popupActions");a.innerHTML="";
+      actions.forEach(act=>{
+        const b=document.createElement("button");b.textContent=act.label;
+        b.onclick=()=>{closePopup();act.callback();};
+        a.appendChild(b);
+      });
+      p.classList.remove("hidden");
+    }
+    function closePopup(){document.getElementById("customPopup").classList.add("hidden");}
+
     // Auth state
     onAuthStateChanged(auth,(user)=>{
       if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}
@@ -187,10 +216,9 @@
     };
 
     document.getElementById("logoutBtn").onclick=()=>signOut(auth);
-
     document.getElementById("resetBtn").onclick=()=>resetForm();
-
     document.getElementById("saveBtn").onclick=()=>submitForm();
+    document.getElementById("searchAdmin").addEventListener("input",reloadList);
 
     async function reloadList(){
       showLoading(true);
@@ -199,14 +227,19 @@
       if(cat) q=query(collection(db,"posts"),where("category","==",cat));
       const snap=await getDocs(q);
       showLoading(false);
+      const keyword=document.getElementById("searchAdmin").value.toLowerCase();
       tbody.innerHTML="";
       snap.forEach(docSnap=>{
         const d=docSnap.data();
+        if(!(d.title.toLowerCase().includes(keyword)||d.content.toLowerCase().includes(keyword))) return;
         const tr=document.createElement("tr");
         tr.innerHTML=`
           <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-            <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
-            <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
+            <div class="mt">
+              <a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
+              <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a> | 
+              <a class="danger" href="#" onclick="hapusRow('${docSnap.id}');return false;">Hapus</a>
+            </div></td>
           <td data-label="Kategori">${d.category}</td>
           <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
           <td data-label="Status"><span class="tag">${d.status}</span></td>
@@ -233,9 +266,15 @@
     };
 
     window.arsipkan=async(id)=>{
-      if(!confirm("Arsipkan item ini?"))return;
       await updateDoc(doc(db,"posts",id),{status:"Arsip"});
       reloadList();
+    };
+
+    window.hapusRow=(id)=>{
+      showPopup("Hapus berita ini?",[
+        {label:"Ya",callback:async()=>{await deleteDoc(doc(db,"posts",id));reloadList();}},
+        {label:"Tidak",callback:()=>{}}
+      ]);
     };
 
     function resetForm(){
