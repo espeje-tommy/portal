@@ -107,12 +107,12 @@
 
     async function loadDetail(){
       const id=new URLSearchParams(window.location.search).get("id");
-      if(!id){showPopup("❌ Tidak ada ID berita.");return;}
+      if(!id){showPopup("Gagal memuat detail");return;}
       try{
         const snap=await getDoc(doc(db,"posts",id));
-        if(!snap.exists()){showPopup("❌ Berita tidak ditemukan.");return;}
+        if(!snap.exists()){showPopup("Gagal memuat detail");return;}
         const d=snap.data();
-        if(d.status!=="Aktif"){showPopup("❌ Berita ini tidak tersedia.");return;}
+        if(d.status!=="Aktif"){showPopup("Berita tidak tersedia");return;}
         document.getElementById("detailContainer").innerHTML=`
           <div class="card">
             ${d.imageUrl?`<img src="${d.imageUrl}" class="detail-img" onclick="showLightbox(this.src)">`:""}
@@ -120,7 +120,9 @@
             <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
             <p>${d.content.replace(/\n/g,"<br>")}</p>
           </div>`;
-      }catch(err){showPopup("Gagal memuat detail: "+err.message);}
+      }catch(err){
+        showPopup("Gagal memuat detail");
+      }
     }
     loadDetail();
 
