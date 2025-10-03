@@ -7,64 +7,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#f7f7fb;--card:#ffffff;--text:#222;--muted:#666;--accent:#f7b500;--accent2:#ffd84d;}
-    *{box-sizing:border-box;}
     body{margin:0;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;}
     header{position:sticky;top:0;background:rgba(255,255,255,.8);backdrop-filter:blur(12px);padding:1rem 1.2rem;border-bottom:1px solid #eee;}
-    h1{margin:0;font-size:1.1rem;}
     main{max-width:980px;margin:1rem auto;padding:0 1rem;}
     .card{background:var(--card);border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:1rem;margin-bottom:1rem;}
     label{display:block;margin:.25rem 0 .2rem;font-weight:500;}
-    input,select,textarea{width:100%;padding:.6rem .75rem;border:1px solid #ddd;border-radius:16px;font-family:inherit;outline:none;}
-    textarea{min-height:120px;resize:vertical;}
+    input,select,textarea{width:100%;padding:.6rem .75rem;border:1px solid #ddd;border-radius:16px;font-family:inherit;}
+    textarea{min-height:120px;}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-    .btn{display:inline-block;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;border:none;padding:.6rem 1.1rem;border-radius:20px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);transition:transform .2s;}
-    .btn:hover{transform:scale(1.03);}
+    .btn{display:inline-block;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#000;border:none;padding:.6rem 1.1rem;border-radius:20px;font-weight:600;cursor:pointer;}
     .btn.secondary{background:#efefef;}
     .right{display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap;}
     table{width:100%;border-collapse:collapse;font-size:.9rem;}
-    th,td{padding:.6rem;border-bottom:1px solid #eee;vertical-align:top;}
-    th{font-weight:600;text-align:left;color:#444;}
+    th,td{padding:.6rem;border-bottom:1px solid #eee;}
     .muted{color:var(--muted);font-size:.85rem;}
-    .tag{display:inline-block;padding:.2rem .5rem;background:#f2f2f2;border-radius:999px;font-size:.8rem;}
+    .tag{padding:.2rem .5rem;background:#f2f2f2;border-radius:999px;font-size:.8rem;}
     .danger{color:#b00020;cursor:pointer;}
     .hidden{display:none;}
-    .mt{margin-top:.6rem;}
-    #formMsg a{color:var(--accent);font-weight:500;text-decoration:none;}
-
-    /* LOGIN */
-    #loginCard{max-width:400px;margin:15vh auto;text-align:center;padding:2rem;}
-    #loginCard input{text-align:center;font-size:1rem;}
-    #loginBtn{margin-top:1rem;width:100%;}
-
-    /* RESPONSIVE */
-    @media(max-width:600px){
-      .row{grid-template-columns:1fr;}
-      #loginCard{margin:20vh 1rem;}
-      header h1{font-size:1rem;}
-      table, thead, tbody, th, td, tr {display:block;}
-      thead{display:none;}
-      tr{margin-bottom:1rem;border:1px solid #eee;border-radius:12px;padding:.5rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05);}
-      td{border:none;padding:.3rem 0;}
-      td::before{content:attr(data-label);font-weight:600;display:block;color:#444;margin-bottom:.2rem;}
-      .right{justify-content:center;}
-    }
-
-    /* LOADING */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;justify-content:center;align-items:center;z-index:3000;}
     .spinner{width:50px;height:50px;border:4px solid #ddd;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
-    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-
-    /* Modal Notifikasi */
     #customModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:4000;}
-    .modal-box{background:var(--card);color:var(--text);padding:1.5rem;border-radius:16px;max-width:300px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);animation:fadeIn .3s ease;}
-    @keyframes fadeIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
+    .modal-box{background:var(--card);color:var(--text);padding:1.5rem;border-radius:16px;max-width:300px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);}
     .modal-box button{margin-top:1rem;}
   </style>
 </head>
 <body>
   <header><h1>Portal Berita — Admin</h1></header>
   <main>
-    <!-- LOGIN -->
     <div id="loginCard" class="card">
       <h3>Login Admin</h3>
       <input type="email" id="loginEmail" placeholder="Email">
@@ -73,229 +42,84 @@
       <div id="loginMsg" class="muted mt"></div>
     </div>
 
-    <!-- FORM -->
     <div id="formCard" class="card hidden">
       <h3 id="formTitle">Tambah Konten</h3>
       <div class="row">
-        <div>
-          <label>Judul</label>
-          <input type="text" id="fJudul" placeholder="Judul berita/pengumuman">
-        </div>
-        <div>
-          <label>Kategori</label>
-          <select id="fKategori">
-            <option>Berita</option>
-            <option>Pengumuman</option>
-            <option>Peraturan</option>
-          </select>
-        </div>
+        <div><label>Judul</label><input type="text" id="fJudul"></div>
+        <div><label>Kategori</label><select id="fKategori"><option>Berita</option><option>Pengumuman</option><option>Peraturan</option></select></div>
       </div>
-
-      <label>Isi Konten</label>
-      <textarea id="fIsi" placeholder="Tulis isi lengkap di sini..."></textarea>
-
+      <label>Isi Konten</label><textarea id="fIsi"></textarea>
       <div class="row">
-        <div>
-          <label>Upload Gambar</label>
-          <input type="file" id="fFile" accept="image/*">
-          <div class="muted">Jika diunggah, otomatis tersimpan ke Cloudinary.</div>
-        </div>
-        <div>
-          <label>GambarURL</label>
-          <input type="text" id="fGambarURL" placeholder="Otomatis terisi setelah upload">
-        </div>
+        <div><label>Upload Gambar</label><input type="file" id="fFile" accept="image/*"><div class="muted">Upload otomatis ke Cloudinary.</div></div>
+        <div><label>Gambar URL</label><input type="text" id="fGambarURL"></div>
       </div>
-
       <div class="row">
-        <div>
-          <label>Status</label>
-          <select id="fStatus"><option>Aktif</option><option>Arsip</option></select>
-        </div>
-        <div>
-          <label>Slug (opsional)</label>
-          <input type="text" id="fSlug" placeholder="contoh-judul-berita">
-        </div>
+        <div><label>Status</label><select id="fStatus"><option>Aktif</option><option>Arsip</option><option>Hapus</option></select></div>
+        <div><label>Slug</label><input type="text" id="fSlug"></div>
       </div>
-
-      <div class="right mt">
-        <button class="btn secondary" id="resetBtn">Bersihkan</button>
-        <button class="btn" id="saveBtn">Simpan</button>
-        <button class="btn secondary" id="logoutBtn">Logout</button>
-      </div>
+      <div class="right mt"><button class="btn secondary" id="resetBtn">Bersihkan</button><button class="btn" id="saveBtn">Simpan</button><button class="btn secondary" id="logoutBtn">Logout</button></div>
       <div id="formMsg" class="muted mt"></div>
     </div>
 
-    <!-- LIST -->
     <div id="listCard" class="card hidden">
-      <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
-        <h3>Daftar Konten</h3>
-        <select id="filterKategori">
-          <option value="">Semua</option>
-          <option>Berita</option>
-          <option>Pengumuman</option>
-          <option>Peraturan</option>
-        </select>
-      </div>
-      <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik.</div>
-      <table>
-        <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
+      <h3>Daftar Konten</h3>
+      <table><thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table>
     </div>
   </main>
 
-  <!-- LOADING -->
   <div id="loadingOverlay"><div class="spinner"></div></div>
+  <div id="customModal"><div class="modal-box"><p id="modalMessage"></p><button onclick="closeModal()" class="btn">OK</button></div></div>
 
-  <!-- Modal Notifikasi -->
-  <div id="customModal">
-    <div class="modal-box">
-      <p id="modalMessage">Pesan notifikasi</p>
-      <button onclick="closeModal()" class="btn">OK</button>
-    </div>
-  </div>
-
-  <!-- FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
-      authDomain: "portal-berita-firebase.firebaseapp.com",
-      projectId: "portal-berita-firebase",
-      storageBucket: "portal-berita-firebase.firebasestorage.app",
-      messagingSenderId: "598254123187",
-      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6"
-    };
+    const firebaseConfig = {apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",authDomain:"portal-berita-firebase.firebaseapp.com",projectId:"portal-berita-firebase",storageBucket:"portal-berita-firebase.firebasestorage.app",messagingSenderId:"598254123187",appId:"1:598254123187:web:9418bcbe0a00dda3c3d8c6"};
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
-    const CLOUD_NAME = "dfojor5pr";
-    const UPLOAD_PRESET = "portal-firebase";
-
-    const loginCard=document.getElementById("loginCard");
-    const formCard=document.getElementById("formCard");
-    const listCard=document.getElementById("listCard");
-    const tbody=document.getElementById("tbody");
+    const CLOUD_NAME="dfojor5pr"; const UPLOAD_PRESET="portal-firebase";
 
     let EDIT_ID=null;
-
     function showLoading(on=true){document.getElementById("loadingOverlay").style.display=on?"flex":"none";}
+    window.showModal=msg=>{document.getElementById("modalMessage").textContent=msg;document.getElementById("customModal").style.display="flex";}
+    window.closeModal=()=>{document.getElementById("customModal").style.display="none";}
 
-    // Modal
-    window.showModal=function(msg){
-      document.getElementById("modalMessage").textContent=msg;
-      document.getElementById("customModal").style.display="flex";
-    }
-    window.closeModal=function(){
-      document.getElementById("customModal").style.display="none";
-    }
+    onAuthStateChanged(auth,(user)=>{if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}else{loginCard.classList.remove("hidden");formCard.classList.add("hidden");listCard.classList.add("hidden");}});
 
-    onAuthStateChanged(auth,(user)=>{
-      if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}
-      else{loginCard.classList.remove("hidden");formCard.classList.add("hidden");listCard.classList.add("hidden");}
-    });
-
-    document.getElementById("loginBtn").onclick=async()=>{
-      const email=document.getElementById("loginEmail").value;
-      const pw=document.getElementById("loginPassword").value;
-      try{await signInWithEmailAndPassword(auth,email,pw);}
-      catch(err){document.getElementById("loginMsg").textContent="Login gagal: "+err.message;}
-    };
-
-    document.getElementById("logoutBtn").onclick=()=>signOut(auth);
-    document.getElementById("resetBtn").onclick=()=>resetForm();
-    document.getElementById("saveBtn").onclick=()=>submitForm();
+    loginBtn.onclick=async()=>{try{await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);}catch(e){loginMsg.textContent="Login gagal: "+e.message;}};
+    logoutBtn.onclick=()=>signOut(auth);
+    resetBtn.onclick=()=>resetForm();
+    saveBtn.onclick=()=>submitForm();
 
     async function reloadList(){
       showLoading(true);
-      let q=collection(db,"posts");
-      const cat=document.getElementById("filterKategori").value;
-      if(cat) q=query(collection(db,"posts"),where("category","==",cat));
-      const snap=await getDocs(q);
+      const snap=await getDocs(collection(db,"posts"));
       showLoading(false);
       tbody.innerHTML="";
       snap.forEach(docSnap=>{
         const d=docSnap.data();
         const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-            <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
-            <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
-          <td data-label="Kategori">${d.category}</td>
-          <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
-          <td data-label="Status"><span class="tag">${d.status}</span></td>
-          <td data-label="Gambar">${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
+        tr.innerHTML=`<td>${d.title}</td><td>${d.category}</td><td>${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td><td><span class="tag">${d.status}</span></td>`;
         tbody.appendChild(tr);
       });
     }
 
-    window.editRow=async(id)=>{
-      showLoading(true);
-      const snap=await getDoc(doc(db,"posts",id));
-      showLoading(false);
-      if(!snap.exists())return;
-      const d=snap.data();
-      EDIT_ID=id;
-      document.getElementById("formTitle").textContent="Edit Konten";
-      document.getElementById("fJudul").value=d.title||"";
-      document.getElementById("fKategori").value=d.category||"Berita";
-      document.getElementById("fIsi").value=d.content||"";
-      document.getElementById("fGambarURL").value=d.imageUrl||"";
-      document.getElementById("fStatus").value=d.status||"Aktif";
-      document.getElementById("fSlug").value=d.slug||"";
-      window.scrollTo({top:0,behavior:"smooth"});
-    };
-
-    window.arsipkan=async(id)=>{
-      await updateDoc(doc(db,"posts",id),{status:"Arsip"});
-      showModal("Konten berhasil diarsipkan.");
-      reloadList();
-    };
-
-    function resetForm(){
-      EDIT_ID=null;
-      document.getElementById("formTitle").textContent="Tambah Konten";
-      ["fJudul","fIsi","fGambarURL","fSlug"].forEach(id=>document.getElementById(id).value="");
-      document.getElementById("fKategori").value="Berita";
-      document.getElementById("fStatus").value="Aktif";
-      document.getElementById("fFile").value="";
-      document.getElementById("formMsg").textContent="";
-    }
-
     async function submitForm(){
-      const title=document.getElementById("fJudul").value.trim();
-      const category=document.getElementById("fKategori").value;
-      const content=document.getElementById("fIsi").value.trim();
-      const status=document.getElementById("fStatus").value;
-      const slug=document.getElementById("fSlug").value.trim();
-      let imageUrl=document.getElementById("fGambarURL").value.trim();
-
-      const file=document.getElementById("fFile").files[0];
-      if(file){
-        const formData=new FormData();
-        formData.append("file",file);
-        formData.append("upload_preset",UPLOAD_PRESET);
-        showLoading(true);
-        const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{method:"POST",body:formData});
-        const data=await res.json();
-        showLoading(false);
-        if(data.secure_url){imageUrl=data.secure_url;document.getElementById("fGambarURL").value=imageUrl;}
-      }
-
+      const title=fJudul.value.trim(), category=fKategori.value, content=fIsi.value.trim(), status=fStatus.value, slug=fSlug.value.trim(); let imageUrl=fGambarURL.value.trim();
+      const file=fFile.files[0];
+      if(file){const formData=new FormData();formData.append("file",file);formData.append("upload_preset",UPLOAD_PRESET);showLoading(true);const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{method:"POST",body:formData});const data=await res.json();showLoading(false);if(data.secure_url){imageUrl=data.secure_url;fGambarURL.value=imageUrl;}}
       const payload={title,category,content,status,slug,imageUrl,createdAt:serverTimestamp(),author:auth.currentUser.email};
-
       try{
-        if(EDIT_ID){await updateDoc(doc(db,"posts",EDIT_ID),payload);}
-        else{await addDoc(collection(db,"posts"),payload);}
-        document.getElementById("formMsg").textContent="Tersimpan ✓";
-        showModal("Konten berhasil disimpan.");
+        if(status==="Hapus" && EDIT_ID){await deleteDoc(doc(db,"posts",EDIT_ID));showModal("Konten dihapus permanen.");}
+        else if(EDIT_ID){await updateDoc(doc(db,"posts",EDIT_ID),payload);showModal("Konten diperbarui.");}
+        else{await addDoc(collection(db,"posts"),payload);showModal("Konten baru ditambahkan.");}
         resetForm();reloadList();
-      }catch(err){showModal("Gagal menyimpan: "+err.message);}
+      }catch(err){showModal("Gagal: "+err.message);}
     }
+
+    function resetForm(){EDIT_ID=null;fJudul.value="";fIsi.value="";fGambarURL.value="";fSlug.value="";fKategori.value="Berita";fStatus.value="Aktif";fFile.value="";}
   </script>
 </body>
 </html>
