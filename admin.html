@@ -29,23 +29,35 @@
     .danger{color:#b00020;cursor:pointer;}
     .hidden{display:none;}
     .mt{margin-top:.6rem;}
+    #formMsg a{color:var(--accent);font-weight:500;text-decoration:none;}
+
+    /* LOGIN */
     #loginCard{max-width:400px;margin:15vh auto;text-align:center;padding:2rem;}
     #loginCard input{text-align:center;font-size:1rem;}
     #loginBtn{margin-top:1rem;width:100%;}
+
+    /* RESPONSIVE */
     @media(max-width:600px){
       .row{grid-template-columns:1fr;}
       #loginCard{margin:20vh 1rem;}
       header h1{font-size:1rem;}
-      table{font-size:.8rem;}
+      table, thead, tbody, th, td, tr {display:block;}
+      thead{display:none;}
+      tr{margin-bottom:1rem;border:1px solid #eee;border-radius:12px;padding:.5rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+      td{border:none;padding:.3rem 0;}
+      td::before{content:attr(data-label);font-weight:600;display:block;color:#444;margin-bottom:.2rem;}
       .right{justify-content:center;}
     }
+
+    /* LOADING */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);display:none;justify-content:center;align-items:center;z-index:3000;}
     .spinner{width:50px;height:50px;border:4px solid #ddd;border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
     @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    /* === popup custom === */
-    .fb01-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:9999}
+
+    /* POPUP */
+    .fb01-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:5000}
     .fb01-overlay.active{display:flex}
-    .fb01-box{background:#fff;max-width:340px;width:90%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;color:inherit}
+    .fb01-box{background:#fff;max-width:340px;width:90%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;color:inherit;text-align:center;}
     .fb01-box p{margin:0;font-size:14px;line-height:1.5}
     .fb01-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
     .fb01-btn{border:none;border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600}
@@ -82,8 +94,10 @@
           </select>
         </div>
       </div>
+
       <label>Isi Konten</label>
       <textarea id="fIsi" placeholder="Tulis isi lengkap di sini..."></textarea>
+
       <div class="row">
         <div>
           <label>Upload Gambar</label>
@@ -94,6 +108,7 @@
           <input type="text" id="fGambarURL" placeholder="Otomatis terisi setelah upload">
         </div>
       </div>
+
       <div class="row">
         <div>
           <label>Status</label>
@@ -104,6 +119,7 @@
           <input type="text" id="fSlug" placeholder="contoh-judul-berita">
         </div>
       </div>
+
       <div class="right mt">
         <button class="btn secondary" id="resetBtn">Bersihkan</button>
         <button class="btn" id="saveBtn">Simpan</button>
@@ -114,7 +130,15 @@
 
     <!-- LIST -->
     <div id="listCard" class="card hidden">
-      <h3>Daftar Konten</h3>
+      <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Daftar Konten</h3>
+        <select id="filterKategori">
+          <option value="">Semua</option>
+          <option>Berita</option>
+          <option>Pengumuman</option>
+          <option>Peraturan</option>
+        </select>
+      </div>
       <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik.</div>
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
@@ -126,7 +150,7 @@
   <!-- LOADING -->
   <div id="loadingOverlay"><div class="spinner"></div></div>
 
-  <!-- Popup -->
+  <!-- POPUP -->
   <div id="fb01Popup" class="fb01-overlay" aria-hidden="true">
     <div class="fb01-box">
       <p id="fb01Msg"></p>
@@ -138,47 +162,50 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
-      authDomain:"portal-berita-firebase.firebaseapp.com",
-      projectId:"portal-berita-firebase",
-      storageBucket:"portal-berita-firebase.firebasestorage.app",
-      messagingSenderId:"598254123187",
-      appId:"1:598254123187:web:9418bcbe0a00dda3c3d8c6"
+    const firebaseConfig = { /* ... sama seperti sebelumnya ... */ 
+      apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
+      authDomain: "portal-berita-firebase.firebaseapp.com",
+      projectId: "portal-berita-firebase",
+      storageBucket: "portal-berita-firebase.firebasestorage.app",
+      messagingSenderId: "598254123187",
+      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6"
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const CLOUD_NAME="dfojor5pr";
-    const UPLOAD_PRESET="portal-firebase";
+    // Cloudinary
+    const CLOUD_NAME = "dfojor5pr";
+    const UPLOAD_PRESET = "portal-firebase";
 
     const loginCard=document.getElementById("loginCard");
     const formCard=document.getElementById("formCard");
     const listCard=document.getElementById("listCard");
     const tbody=document.getElementById("tbody");
+
     let EDIT_ID=null;
 
     function showLoading(on=true){document.getElementById("loadingOverlay").style.display=on?"flex":"none";}
 
-    // === popup helper ===
+    // Popup helpers
     function fb01Alert(msg){
-      const overlay=document.getElementById('fb01Popup');
-      document.getElementById('fb01Msg').textContent=msg;
-      document.getElementById('fb01Actions').innerHTML='<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">OK</button>';
-      overlay.classList.add('active');
+      const overlay=document.getElementById("fb01Popup");
+      document.getElementById("fb01Msg").textContent=msg;
+      document.getElementById("fb01Actions").innerHTML='<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">OK</button>';
+      overlay.classList.add("active");
     }
-    function fb01Confirm(msg,callback){
-      const overlay=document.getElementById('fb01Popup');
-      document.getElementById('fb01Msg').textContent=msg;
-      document.getElementById('fb01Actions').innerHTML=
-        '<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+callback+')(true)">Ya</button>'+
-        '<button class="fb01-btn fb01-cancel" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+callback+')(false)">Batal</button>';
-      overlay.classList.add('active');
+    function fb01Confirm(msg,onYes){
+      const overlay=document.getElementById("fb01Popup");
+      document.getElementById("fb01Msg").textContent=msg;
+      document.getElementById("fb01Actions").innerHTML=
+        '<button class="fb01-btn fb01-ok" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`);('+onYes+')()">Ya</button>'+
+        '<button class="fb01-btn fb01-cancel" onclick="document.getElementById(`fb01Popup`).classList.remove(`active`)">Batal</button>';
+      overlay.classList.add("active");
     }
 
+    // Auth state
     onAuthStateChanged(auth,(user)=>{
       if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}
       else{loginCard.classList.remove("hidden");formCard.classList.add("hidden");listCard.classList.add("hidden");}
@@ -197,19 +224,23 @@
 
     async function reloadList(){
       showLoading(true);
-      const snap=await getDocs(collection(db,"posts"));
+      let q=collection(db,"posts");
+      const cat=document.getElementById("filterKategori").value;
+      if(cat) q=query(collection(db,"posts"),where("category","==",cat));
+      const snap=await getDocs(q);
       showLoading(false);
       tbody.innerHTML="";
       snap.forEach(docSnap=>{
         const d=docSnap.data();
         const tr=document.createElement("tr");
         tr.innerHTML=`
-          <td><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-          <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
-          <td>${d.category}</td>
-          <td>${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
-          <td><span class="tag">${d.status}</span></td>
-          <td>${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
+          <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
+            <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
+            <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
+          <td data-label="Kategori">${d.category}</td>
+          <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
+          <td data-label="Status"><span class="tag">${d.status}</span></td>
+          <td data-label="Gambar">${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
         tbody.appendChild(tr);
       });
     }
@@ -232,7 +263,7 @@
     };
 
     window.arsipkan=(id)=>{
-      fb01Confirm("Arsipkan item ini?",async(ok)=>{if(ok){await updateDoc(doc(db,"posts",id),{status:"Arsip"});reloadList();}});
+      fb01Confirm("Arsipkan item ini?", async ()=>{await updateDoc(doc(db,"posts",id),{status:"Arsip"});reloadList();});
     };
 
     function resetForm(){
