@@ -31,7 +31,6 @@
     .btn:hover{transform:scale(1.05);}
     .thumb{width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:.8rem;}
     footer{text-align:center;padding:1rem;font-size:.9rem;opacity:.7;}
-    @media(max-width:768px){header{flex-direction:column;gap:.6rem;text-align:center;}nav{justify-content:center;gap:.4rem;}nav a{font-size:.8rem;padding:.3rem .6rem;border-radius:8px;}}
 
     /* Loading Overlay */
     #loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:500;color:#333;z-index:3000;}
@@ -41,10 +40,18 @@
 
     /* Modal Notifikasi */
     #customModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:4000;}
-    .modal-box{background:var(--card-light);color:var(--text-light);padding:1.5rem;border-radius:16px;max-width:300px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);animation:fadeIn .3s ease;}
-    body.dark .modal-box{background:var(--card-dark);color:var(--text-dark);}
+    .modal-box{background:#fff!important;color:var(--text-light);padding:1.5rem;border-radius:16px;max-width:300px;width:90%;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);animation:fadeIn .3s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    body.dark .modal-box{background:#1e1e1e!important;color:var(--text-dark);}
     @keyframes fadeIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
-    .modal-box button{margin-top:1rem;}
+    .modal-box button{margin-top:1rem;align-self:center;}
+
+    /* 📱 Mobile lebih ramping */
+    @media(max-width:600px){
+      header{flex-direction:column;gap:.2rem;padding:.4rem .8rem;}
+      header h2{font-size:1rem;}
+      nav{gap:.3rem;}
+      nav a{font-size:.75rem;padding:.25rem .6rem;border-radius:8px;}
+    }
   </style>
 </head>
 <body>
@@ -58,107 +65,57 @@
   </header>
 
   <button class="theme-toggle" id="themeToggle">☀️</button>
-
-  <main>
-    <div id="contentList"></div>
-  </main>
-
+  <main><div id="contentList"></div></main>
   <footer>Hak Cipta © 2025 Portal Berita</footer>
 
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay">
-    <div class="loader"></div>
-    <p>Memuat konten...</p>
-  </div>
+  <div id="loadingOverlay"><div class="loader"></div><p>Memuat konten...</p></div>
 
-  <!-- Modal Notifikasi -->
-  <div id="customModal">
-    <div class="modal-box">
-      <p id="modalMessage">Pesan notifikasi</p>
-      <button onclick="closeModal()" class="btn">OK</button>
-    </div>
-  </div>
+  <div id="customModal"><div class="modal-box"><p id="modalMessage">Pesan notifikasi</p><button onclick="closeModal()" class="btn">OK</button></div></div>
 
-  <!-- Firebase + Firestore -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy, where } 
-      from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
-      authDomain: "portal-berita-firebase.firebaseapp.com",
-      projectId: "portal-berita-firebase",
-      storageBucket: "portal-berita-firebase.firebasestorage.app",
-      messagingSenderId: "598254123187",
-      appId: "1:598254123187:web:9418bcbe0a00dda3c3d8c6",
-      measurementId: "G-FZKQG25PJW"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const firebaseConfig={apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",authDomain:"portal-berita-firebase.firebaseapp.com",projectId:"portal-berita-firebase",storageBucket:"portal-berita-firebase.firebasestorage.app",messagingSenderId:"598254123187",appId:"1:598254123187:web:9418bcbe0a00dda3c3d8c6"};
+    const app=initializeApp(firebaseConfig);const db=getFirestore(app);
 
     const themeToggle=document.getElementById("themeToggle");
-    if(themeToggle){
-      themeToggle.addEventListener("click",()=>{
-        document.body.classList.toggle("dark");
-        localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
-        themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";
-      });
-      if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}
-    }
+    if(themeToggle){themeToggle.addEventListener("click",()=>{document.body.classList.toggle("dark");localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";});if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}}
 
     function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
     function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
-
-    // Modal
-    window.showModal=function(msg){
-      document.getElementById("modalMessage").textContent=msg;
-      document.getElementById("customModal").style.display="flex";
-    }
-    window.closeModal=function(){
-      document.getElementById("customModal").style.display="none";
-    }
+    window.showModal=(msg)=>{document.getElementById("modalMessage").textContent=msg;document.getElementById("customModal").style.display="flex";}
+    window.closeModal=()=>{document.getElementById("customModal").style.display="none";}
 
     async function loadPosts(category){
       showLoading();
-      try {
-        const q = query(
-          collection(db, "posts"),
-          where("category", "==", category),
-          orderBy("createdAt", "desc")
-        );
-        const snap = await getDocs(q);
+      try{
+        const q=query(collection(db,"posts"),where("category","==",category),where("status","==","Aktif"),orderBy("createdAt","desc"));
+        const snap=await getDocs(q);
         hideLoading();
-        const c = document.getElementById("contentList");
-        c.innerHTML = "";
-        if (snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
+        const c=document.getElementById("contentList");c.innerHTML="";
+        if(snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
         snap.forEach(doc=>{
-          const d = doc.data();
-          c.innerHTML += `
+          const d=doc.data();
+          // --- ✅ PERUBAHAN ADA DI 1 BARIS DI BAWAH INI ---
+          const thumbnail = (d.images && d.images.length > 0) 
+            ? `<img src="${d.images[0]}" class="thumb">` 
+            : (d.imageUrl ? `<img src="${d.imageUrl}" class="thumb">` : "");
+
+          c.innerHTML+=`
             <div class="card">
-              ${d.imageUrl?`<img src="${d.imageUrl}" class="thumb">`:""}
+              ${thumbnail}
               <h3>${d.title}</h3>
               <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
               <p>${d.content.substring(0,120)}...</p>
               <a href="detail.html?id=${doc.id}" class="btn">Baca Selengkapnya</a>
             </div>`;
         });
-      } catch(err){
-        hideLoading();
-        showModal("Gagal memuat data: "+err.message);
-      }
+      }catch(err){hideLoading();showModal("Gagal memuat data: "+err.message);}
     }
 
     loadPosts("Berita");
-    document.querySelectorAll("nav a").forEach(a=>{
-      a.addEventListener("click",e=>{
-        e.preventDefault();
-        document.querySelectorAll("nav a").forEach(x=>x.classList.remove("active"));
-        a.classList.add("active");
-        loadPosts(a.dataset.tab);
-      });
-    });
+    document.querySelectorAll("nav a").forEach(a=>{a.addEventListener("click",e=>{e.preventDefault();document.querySelectorAll("nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");loadPosts(a.dataset.tab);});});
   </script>
 </body>
 </html>

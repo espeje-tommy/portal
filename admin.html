@@ -64,16 +64,16 @@
 <body>
   <header><h1>Portal Berita — Admin</h1></header>
   <main>
-    <!-- LOGIN -->
     <div id="loginCard" class="card">
       <h3>Login Admin</h3>
-      <input type="email" id="loginEmail" placeholder="Email">
-      <input type="password" id="loginPassword" placeholder="Password">
-      <button id="loginBtn" class="btn">Masuk</button>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button id="loginBtn" type="submit" class="btn">Masuk</button>
+      </form>
       <div id="loginMsg" class="muted mt"></div>
     </div>
 
-    <!-- FORM -->
     <div id="formCard" class="card hidden">
       <h3 id="formTitle">Tambah Konten</h3>
       <div class="row">
@@ -97,12 +97,8 @@
       <div class="row">
         <div>
           <label>Upload Gambar</label>
-          <input type="file" id="fFile" accept="image/*">
-          <div class="muted">Jika diunggah, otomatis tersimpan ke Cloudinary.</div>
-        </div>
-        <div>
-          <label>GambarURL</label>
-          <input type="text" id="fGambarURL" placeholder="Otomatis terisi setelah upload">
+          <input type="file" id="fFile" accept="image/*" multiple>
+          <div class="muted">Anda bisa pilih lebih dari 1 gambar.</div>
         </div>
       </div>
 
@@ -125,7 +121,6 @@
       <div id="formMsg" class="muted mt"></div>
     </div>
 
-    <!-- LIST -->
     <div id="listCard" class="card hidden">
       <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
         <h3>Daftar Konten</h3>
@@ -136,7 +131,7 @@
           <option>Peraturan</option>
         </select>
       </div>
-      <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik.</div>
+      <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik. "Hapus" untuk menghapus permanen.</div>
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
         <tbody id="tbody"></tbody>
@@ -144,10 +139,8 @@
     </div>
   </main>
 
-  <!-- LOADING -->
   <div id="loadingOverlay"><div class="spinner"></div></div>
 
-  <!-- Modal Notifikasi -->
   <div id="customModal">
     <div class="modal-box">
       <p id="modalMessage">Pesan notifikasi</p>
@@ -155,11 +148,10 @@
     </div>
   </div>
 
-  <!-- FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getDoc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",
@@ -172,9 +164,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-
-    const CLOUD_NAME = "dfojor5pr";
-    const UPLOAD_PRESET = "portal-firebase";
 
     const loginCard=document.getElementById("loginCard");
     const formCard=document.getElementById("formCard");
@@ -194,17 +183,20 @@
       document.getElementById("customModal").style.display="none";
     }
 
+    // Login with Enter
+    const loginForm=document.getElementById("loginForm");
+    loginForm.addEventListener("submit",async(e)=>{
+      e.preventDefault();
+      const email=document.getElementById("loginEmail").value;
+      const pw=document.getElementById("loginPassword").value;
+      try{await signInWithEmailAndPassword(auth,email,pw);}
+      catch(err){document.getElementById("loginMsg").textContent="Login gagal"}
+    });
+
     onAuthStateChanged(auth,(user)=>{
       if(user){loginCard.classList.add("hidden");formCard.classList.remove("hidden");listCard.classList.remove("hidden");reloadList();}
       else{loginCard.classList.remove("hidden");formCard.classList.add("hidden");listCard.classList.add("hidden");}
     });
-
-    document.getElementById("loginBtn").onclick=async()=>{
-      const email=document.getElementById("loginEmail").value;
-      const pw=document.getElementById("loginPassword").value;
-      try{await signInWithEmailAndPassword(auth,email,pw);}
-      catch(err){document.getElementById("loginMsg").textContent="Login gagal: "+err.message;}
-    };
 
     document.getElementById("logoutBtn").onclick=()=>signOut(auth);
     document.getElementById("resetBtn").onclick=()=>resetForm();
@@ -223,15 +215,20 @@
         const tr=document.createElement("tr");
         tr.innerHTML=`
           <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
-            <div class="mt"><a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
-            <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a></div></td>
+            <div class="mt">
+              <a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
+              <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a> | 
+              <a class="danger" href="#" onclick="hapus('${docSnap.id}');return false;">Hapus</a>
+            </div></td>
           <td data-label="Kategori">${d.category}</td>
           <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
           <td data-label="Status"><span class="tag">${d.status}</span></td>
-          <td data-label="Gambar">${d.imageUrl?`<a href="${d.imageUrl}" target="_blank">Lihat</a>`:"-"}</td>`;
+          <td data-label="Gambar">${d.images && d.images.length > 0 ? `<a href="${d.images[0]}" target="_blank">Lihat</a>` : "-"}</td>`;
         tbody.appendChild(tr);
       });
     }
+
+    document.getElementById("filterKategori").addEventListener("change", ()=>reloadList());
 
     window.editRow=async(id)=>{
       showLoading(true);
@@ -244,7 +241,7 @@
       document.getElementById("fJudul").value=d.title||"";
       document.getElementById("fKategori").value=d.category||"Berita";
       document.getElementById("fIsi").value=d.content||"";
-      document.getElementById("fGambarURL").value=d.imageUrl||"";
+      // DIUBAH DISINI (baris fGambarURL dihapus)
       document.getElementById("fStatus").value=d.status||"Aktif";
       document.getElementById("fSlug").value=d.slug||"";
       window.scrollTo({top:0,behavior:"smooth"});
@@ -256,10 +253,17 @@
       reloadList();
     };
 
+    window.hapus=async(id)=>{
+      await deleteDoc(doc(db,"posts",id));
+      showModal("Konten berhasil dihapus.");
+      reloadList();
+    };
+
     function resetForm(){
       EDIT_ID=null;
       document.getElementById("formTitle").textContent="Tambah Konten";
-      ["fJudul","fIsi","fGambarURL","fSlug"].forEach(id=>document.getElementById(id).value="");
+      // DIUBAH DISINI (fGambarURL dihapus dari list)
+      ["fJudul","fIsi","fSlug"].forEach(id=>document.getElementById(id).value="");
       document.getElementById("fKategori").value="Berita";
       document.getElementById("fStatus").value="Aktif";
       document.getElementById("fFile").value="";
@@ -267,30 +271,44 @@
     }
 
     async function submitForm(){
+      // DIUBAH DISINI (seluruh fungsi ini di-update)
       const title=document.getElementById("fJudul").value.trim();
       const category=document.getElementById("fKategori").value;
       const content=document.getElementById("fIsi").value.trim();
       const status=document.getElementById("fStatus").value;
       const slug=document.getElementById("fSlug").value.trim();
-      let imageUrl=document.getElementById("fGambarURL").value.trim();
+      let imageUrls = []; // 1. Siapkan array kosong untuk menampung URL
 
-      const file=document.getElementById("fFile").files[0];
-      if(file){
-        const formData=new FormData();
-        formData.append("file",file);
-        formData.append("upload_preset",UPLOAD_PRESET);
+      const files=document.getElementById("fFile").files; // 2. Ambil semua file yang dipilih
+      if(files.length > 0){
         showLoading(true);
-        const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{method:"POST",body:formData});
-        const data=await res.json();
+        // 3. Lakukan perulangan untuk setiap file
+        for(const file of files){
+          const formData=new FormData();
+          formData.append("file",file);
+          formData.append("upload_preset","portal-firebase");
+          // jangan pindahkan showLoading ke dalam loop, agar loadingnya sekali saja
+          const res=await fetch(`https://api.cloudinary.com/v1_1/dfojor5pr/image/upload`,{method:"POST",body:formData});
+          const data=await res.json();
+          // 4. Jika berhasil, masukkan URL ke dalam array
+          if(data.secure_url) {
+            imageUrls.push(data.secure_url);
+          }
+        }
         showLoading(false);
-        if(data.secure_url){imageUrl=data.secure_url;document.getElementById("fGambarURL").value=imageUrl;}
       }
 
-      const payload={title,category,content,status,slug,imageUrl,createdAt:serverTimestamp(),author:auth.currentUser.email};
+      // 5. Ubah 'imageUrl' menjadi 'images' dengan isi array imageUrls
+      const payload={title,category,content,status,slug,images:imageUrls,createdAt:serverTimestamp(),author:auth.currentUser.email};
 
       try{
-        if(EDIT_ID){await updateDoc(doc(db,"posts",EDIT_ID),payload);}
-        else{await addDoc(collection(db,"posts"),payload);}
+        if(EDIT_ID){
+            // Saat edit, payload juga menggunakan 'images', menimpa data gambar lama
+            await updateDoc(doc(db,"posts",EDIT_ID),payload);
+        }
+        else{
+            await addDoc(collection(db,"posts"),payload);
+        }
         document.getElementById("formMsg").textContent="Tersimpan ✓";
         showModal("Konten berhasil disimpan.");
         resetForm();reloadList();
