@@ -15,21 +15,66 @@
     }
     body {margin:0;font-family:'Poppins',sans-serif;background:var(--bg-light);color:var(--text-light);transition:.3s;}
     body.dark {background:var(--bg-dark);color:var(--text-dark);}
+
     header {display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;backdrop-filter:blur(12px);background:rgba(255,255,255,.7);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(0,0,0,.05);}
     body.dark header{background:rgba(18,18,18,.8);border-bottom:1px solid rgba(255,255,255,.1);}
-    nav{display:flex;gap:.8rem;}
+    header h2{margin:0;}
+    nav{display:flex;gap:.8rem;align-items:center;}
     nav a{padding:.4rem 1rem;border-radius:12px;font-weight:500;text-decoration:none;color:inherit;}
     nav a.active,nav a:hover{background:var(--accent);color:#000;}
-    .theme-toggle{position:fixed;top:12px;right:12px;z-index:2000;background:var(--card-light);border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+
+    /* 🔍 Ikon search */
+    .search-toggle{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:36px;height:36px;border-radius:50%;cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,.12);
+      background:var(--card-light);
+      user-select:none; font-size:1rem;
+    }
+    body.dark .search-toggle{background:var(--card-dark);color:#fff;}
+
+    /* ☀️ Tombol tema */
+    .theme-toggle{
+      position:fixed;bottom:20px;left:20px;
+      background:var(--card-light);border:none;border-radius:50%;
+      width:42px;height:42px;font-size:1.2rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2000;
+    }
     body.dark .theme-toggle{background:var(--card-dark);color:#fff;}
+    @media(max-width:600px){
+      .theme-toggle{top:12px;right:12px;left:auto;bottom:auto;}
+    }
+
+    /* Search bar */
+    #searchBarWrap{
+      overflow:hidden;
+      max-height:0; opacity:0; transform:translateY(-8px);
+      transition:max-height .28s ease, opacity .28s ease, transform .28s ease, padding .28s ease;
+      padding:0 1.5rem;
+      max-width:800px;
+      margin:auto;
+    }
+    #searchBarWrap.open{
+      max-height:120px; opacity:1; transform:translateY(0); padding:.6rem 1.5rem 0;
+    }
+    #searchInput{
+      width:100%; padding:.7rem .95rem; border:1px solid #ddd; border-radius:16px; outline:none;
+      background:var(--card-light); color:inherit; font-family:inherit; font-size:.95rem;
+      box-shadow:0 4px 14px rgba(0,0,0,.06);
+    }
+    body.dark #searchInput{background:var(--card-dark);border-color:#333;color:var(--text-dark);}
+
     main{padding:1.5rem;max-width:800px;margin:auto;}
     .card{background:var(--card-light);margin-bottom:1.2rem;border-radius:18px;padding:1.2rem;box-shadow:0 4px 12px rgba(0,0,0,.05);}
     body.dark .card{background:var(--card-dark);}
-    .card h2,.card h3{margin:.3rem 0;}
+    .card h3{margin:.3rem 0;}
     .date{font-size:.85rem;color:#777;margin-bottom:.6rem;} body.dark .date{color:#aaa;}
     .btn{display:inline-block;padding:.55rem 1.2rem;border-radius:14px;background:var(--accent-gradient);color:#000;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 4px 12px rgba(0,0,0,.25);transition:transform .2s;}
     .btn:hover{transform:scale(1.05);}
     .thumb{width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:.8rem;}
+
+    .no-results{padding:1rem;text-align:center;opacity:.7}
     footer{text-align:center;padding:1rem;font-size:.9rem;opacity:.7;}
 
     /* Loading Overlay */
@@ -44,14 +89,6 @@
     body.dark .modal-box{background:#1e1e1e!important;color:var(--text-dark);}
     @keyframes fadeIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
     .modal-box button{margin-top:1rem;align-self:center;}
-
-    /* 📱 Mobile lebih ramping */
-    @media(max-width:600px){
-      header{flex-direction:column;gap:.2rem;padding:.4rem .8rem;}
-      header h2{font-size:1rem;}
-      nav{gap:.3rem;}
-      nav a{font-size:.75rem;padding:.25rem .6rem;border-radius:8px;}
-    }
   </style>
 </head>
 <body>
@@ -61,15 +98,22 @@
       <a href="#" class="active" data-tab="Berita">Berita</a>
       <a href="#" data-tab="Pengumuman">Pengumuman</a>
       <a href="#" data-tab="Peraturan">Peraturan</a>
+      <span id="searchToggle" class="search-toggle" title="Cari">🔍</span>
     </nav>
   </header>
 
+  <div id="searchBarWrap">
+    <input id="searchInput" type="text" placeholder="Cari judul atau isi konten...">
+  </div>
+
   <button class="theme-toggle" id="themeToggle">☀️</button>
-  <main><div id="contentList"></div></main>
+  <main>
+    <div id="contentList"></div>
+    <div id="noResults" class="no-results" style="display:none;">Tidak ada hasil untuk pencarian ini.</div>
+  </main>
   <footer>Hak Cipta © 2025 Portal Berita</footer>
 
   <div id="loadingOverlay"><div class="loader"></div><p>Memuat konten...</p></div>
-
   <div id="customModal"><div class="modal-box"><p id="modalMessage">Pesan notifikasi</p><button onclick="closeModal()" class="btn">OK</button></div></div>
 
   <script type="module">
@@ -79,43 +123,142 @@
     const firebaseConfig={apiKey:"AIzaSyDEGklPNtv-LvKzSW0d3QZRo5DMLr1nY-Y",authDomain:"portal-berita-firebase.firebaseapp.com",projectId:"portal-berita-firebase",storageBucket:"portal-berita-firebase.firebasestorage.app",messagingSenderId:"598254123187",appId:"1:598254123187:web:9418bcbe0a00dda3c3d8c6"};
     const app=initializeApp(firebaseConfig);const db=getFirestore(app);
 
+    // 🌙 Theme
     const themeToggle=document.getElementById("themeToggle");
-    if(themeToggle){themeToggle.addEventListener("click",()=>{document.body.classList.toggle("dark");localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";});if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}}
+    if(themeToggle){
+      themeToggle.addEventListener("click",()=>{
+        document.body.classList.toggle("dark");
+        localStorage.setItem("theme",document.body.classList.contains("dark")?"dark":"light");
+        themeToggle.textContent=document.body.classList.contains("dark")?"🌙":"☀️";
+      });
+      if(localStorage.getItem("theme")==="dark"){document.body.classList.add("dark");themeToggle.textContent="🌙";}
+    }
 
-    function showLoading(){document.getElementById("loadingOverlay").style.display="flex";}
-    function hideLoading(){document.getElementById("loadingOverlay").style.display="none";}
-    window.showModal=(msg)=>{document.getElementById("modalMessage").textContent=msg;document.getElementById("customModal").style.display="flex";}
-    window.closeModal=()=>{document.getElementById("customModal").style.display="none";}
+    const contentList=document.getElementById("contentList");
+    const noResultsEl=document.getElementById("noResults");
+    const searchWrap=document.getElementById("searchBarWrap");
+    const searchInput=document.getElementById("searchInput");
+    const searchToggle=document.getElementById("searchToggle");
 
-    async function loadPosts(category){
-      showLoading();
+    // 🔍 Toggle search bar
+    searchToggle.addEventListener("click",()=>{
+      const opening=!searchWrap.classList.contains("open");
+      searchWrap.classList.toggle("open");
+      if(opening){setTimeout(()=>searchInput.focus(),180);}
+      else{searchInput.value="";loadAllPosts();}
+    });
+
+    // Klik luar & ESC menutup search box
+    document.addEventListener("click",(e)=>{
+      const isInside=searchWrap.contains(e.target)||searchToggle.contains(e.target);
+      if(!isInside&&searchWrap.classList.contains("open")){
+        searchWrap.classList.remove("open");
+        searchInput.value="";
+        loadAllPosts();
+      }
+    });
+    document.addEventListener("keydown",(e)=>{
+      if(e.key==="Escape"&&searchWrap.classList.contains("open")){
+        searchWrap.classList.remove("open");
+        searchInput.value="";
+        loadAllPosts();
+      }
+    });
+
+    // 🧩 Render card
+    function renderCard(id,d){
+      const thumb=(d.images&&d.images.length>0)?`<img src="${d.images[0]}" class="thumb">`:(d.imageUrl?`<img src="${d.imageUrl}" class="thumb">`:"");
+      return `<div class="card" data-category="${d.category}" data-title="${(d.title||'').toLowerCase()}" data-content="${(d.content||'').toLowerCase()}">
+        ${thumb}
+        <h3>${d.title}</h3>
+        <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
+        <p>${(d.content||"").substring(0,120)}...</p>
+        <a href="detail.html?id=${id}" class="btn">Baca Selengkapnya</a>
+      </div>`;
+    }
+
+    // 🔄 Muat semua kategori (untuk search global)
+    async function loadAllPosts(){
+      contentList.innerHTML="";
+      noResultsEl.style.display="none";
+      const categories=["Berita","Pengumuman","Peraturan"];
+      try{
+        for(const cat of categories){
+          const q=query(collection(db,"posts"),where("category","==",cat),where("status","==","Aktif"),orderBy("createdAt","desc"));
+          const snap=await getDocs(q);
+          snap.forEach(docSnap=>{
+            const d=docSnap.data();
+            contentList.insertAdjacentHTML("beforeend",renderCard(docSnap.id,d));
+          });
+        }
+      }catch(err){console.error(err);}
+    }
+
+    // 🔘 Klik tombol navigasi kategori
+    document.querySelectorAll("nav a").forEach(a=>{
+      a.addEventListener("click",(e)=>{
+        e.preventDefault();
+        document.querySelectorAll("nav a").forEach(n=>n.classList.remove("active"));
+        a.classList.add("active");
+        const cat=a.dataset.tab;
+        searchWrap.classList.remove("open");
+        searchInput.value="";
+        loadCategory(cat);
+      });
+    });
+
+    async function loadCategory(category){
+      contentList.innerHTML="";
+      noResultsEl.style.display="none";
       try{
         const q=query(collection(db,"posts"),where("category","==",category),where("status","==","Aktif"),orderBy("createdAt","desc"));
         const snap=await getDocs(q);
-        hideLoading();
-        const c=document.getElementById("contentList");c.innerHTML="";
-        if(snap.empty){c.innerHTML="<p>Tidak ada data.</p>";return;}
-        snap.forEach(doc=>{
-          const d=doc.data();
-          // --- ✅ PERUBAHAN ADA DI 1 BARIS DI BAWAH INI ---
-          const thumbnail = (d.images && d.images.length > 0) 
-            ? `<img src="${d.images[0]}" class="thumb">` 
-            : (d.imageUrl ? `<img src="${d.imageUrl}" class="thumb">` : "");
-
-          c.innerHTML+=`
-            <div class="card">
-              ${thumbnail}
-              <h3>${d.title}</h3>
-              <div class="date">${d.createdAt?.toDate().toLocaleDateString("id-ID")||""}</div>
-              <p>${d.content.substring(0,120)}...</p>
-              <a href="detail.html?id=${doc.id}" class="btn">Baca Selengkapnya</a>
-            </div>`;
+        if(snap.empty){noResultsEl.style.display="block";}
+        snap.forEach(docSnap=>{
+          const d=docSnap.data();
+          contentList.insertAdjacentHTML("beforeend",renderCard(docSnap.id,d));
         });
-      }catch(err){hideLoading();showModal("Gagal memuat data: "+err.message);}
+      }catch(err){console.error(err);}
     }
 
-    loadPosts("Berita");
-    document.querySelectorAll("nav a").forEach(a=>{a.addEventListener("click",e=>{e.preventDefault();document.querySelectorAll("nav a").forEach(x=>x.classList.remove("active"));a.classList.add("active");loadPosts(a.dataset.tab);});});
+    // 🔎 Filter client-side
+    function filterCards(q){
+      const cards=[...document.querySelectorAll(".card")];
+      if(!q){cards.forEach(c=>c.style.display="");noResultsEl.style.display="none";return;}
+      let visible=0;
+      cards.forEach(c=>{
+        const t=c.dataset.title||"",k=c.dataset.content||"";
+        const show=t.includes(q)||k.includes(q);
+        c.style.display=show?"":"none";if(show)visible++;
+      });
+      noResultsEl.style.display=visible?"none":"block";
+    }
+
+    searchInput.addEventListener("keyup", async (e) => {
+      const q = e.target.value.trim().toLowerCase();
+
+      if (q) {
+        // Jika user baru mulai mengetik dan hanya 1 kategori termuat → muat semua kategori
+        const cards = document.querySelectorAll(".card");
+        const loadedCats = new Set([...cards].map(c => c.dataset.category));
+        if (loadedCats.size < 3) {
+          await loadAllPosts();
+        }
+        filterCards(q);
+      } else {
+        // Jika input kosong → tampilkan kembali kategori aktif
+        const active = document.querySelector("nav a.active");
+        if (active) {
+          loadCategory(active.dataset.tab);
+        } else {
+          loadAllPosts();
+        }
+      }
+    });
+
+
+    // ⏩ Load awal
+    loadAllPosts();
   </script>
 </body>
 </html>

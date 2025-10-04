@@ -59,6 +59,13 @@
     .modal-box{background:var(--card);color:var(--text);padding:1.5rem;border-radius:16px;max-width:300px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.2);animation:fadeIn .3s ease;}
     @keyframes fadeIn{from{opacity:0;transform:scale(.9);}to{opacity:1;transform:scale(1);}}
     .modal-box button{margin-top:1rem;}
+      
+    /* Penyesuaian jarak search box admin */
+    #listCard #searchAdmin {
+      margin-top: 0.3rem;    /* 🔹 lebih rapat ke dropdown */
+      margin-bottom: 1rem;   /* 🔹 tetap beri jarak ke tabel di bawah */
+    }
+
   </style>
 </head>
 <body>
@@ -131,6 +138,12 @@
           <option>Peraturan</option>
         </select>
       </div>
+
+      <!-- 🔎 Search box di dalam card, tepat di bawah dropdown (desain menyatu) -->
+      <div>
+        <input id="searchAdmin" type="text" placeholder="Cari judul atau isi konten..." />
+      </div>
+
       <div class="muted">Klik "Edit" untuk memuat data ke form. "Arsipkan" untuk menyembunyikan dari publik. "Hapus" untuk menghapus permanen.</div>
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Status</th><th>Gambar</th></tr></thead>
@@ -214,18 +227,25 @@
         const d=docSnap.data();
         const tr=document.createElement("tr");
         tr.innerHTML=`
-          <td data-label="Judul"><strong>${d.title}</strong><div class="muted">${d.slug||""}</div>
+          <td data-label="Judul">
+            <strong>${d.title||""}</strong>
+            <div class="muted">${d.slug||""}</div>
+            <!-- konten disisipkan tersembunyi agar bisa ikut difilter -->
+            <span class="hidden-content" style="display:none;">${(d.content||"").toLowerCase()}</span>
             <div class="mt">
               <a href="#" onclick="editRow('${docSnap.id}');return false;">Edit</a> | 
               <a class="danger" href="#" onclick="arsipkan('${docSnap.id}');return false;">Arsipkan</a> | 
               <a class="danger" href="#" onclick="hapus('${docSnap.id}');return false;">Hapus</a>
-            </div></td>
-          <td data-label="Kategori">${d.category}</td>
+            </div>
+          </td>
+          <td data-label="Kategori">${d.category||""}</td>
           <td data-label="Tanggal">${d.createdAt?d.createdAt.toDate().toLocaleDateString("id-ID"):""}</td>
-          <td data-label="Status"><span class="tag">${d.status}</span></td>
+          <td data-label="Status"><span class="tag">${d.status||""}</span></td>
           <td data-label="Gambar">${d.images && d.images.length > 0 ? `<a href="${d.images[0]}" target="_blank">Lihat</a>` : "-"}</td>`;
         tbody.appendChild(tr);
       });
+      // Terapkan filter admin jika sudah ada input
+      applyAdminSearchFilter();
     }
 
     document.getElementById("filterKategori").addEventListener("change", ()=>reloadList());
@@ -241,7 +261,6 @@
       document.getElementById("fJudul").value=d.title||"";
       document.getElementById("fKategori").value=d.category||"Berita";
       document.getElementById("fIsi").value=d.content||"";
-      // DIUBAH DISINI (baris fGambarURL dihapus)
       document.getElementById("fStatus").value=d.status||"Aktif";
       document.getElementById("fSlug").value=d.slug||"";
       window.scrollTo({top:0,behavior:"smooth"});
@@ -262,7 +281,6 @@
     function resetForm(){
       EDIT_ID=null;
       document.getElementById("formTitle").textContent="Tambah Konten";
-      // DIUBAH DISINI (fGambarURL dihapus dari list)
       ["fJudul","fIsi","fSlug"].forEach(id=>document.getElementById(id).value="");
       document.getElementById("fKategori").value="Berita";
       document.getElementById("fStatus").value="Aktif";
@@ -271,39 +289,31 @@
     }
 
     async function submitForm(){
-      // DIUBAH DISINI (seluruh fungsi ini di-update)
       const title=document.getElementById("fJudul").value.trim();
       const category=document.getElementById("fKategori").value;
       const content=document.getElementById("fIsi").value.trim();
       const status=document.getElementById("fStatus").value;
       const slug=document.getElementById("fSlug").value.trim();
-      let imageUrls = []; // 1. Siapkan array kosong untuk menampung URL
+      let imageUrls = [];
 
-      const files=document.getElementById("fFile").files; // 2. Ambil semua file yang dipilih
+      const files=document.getElementById("fFile").files;
       if(files.length > 0){
         showLoading(true);
-        // 3. Lakukan perulangan untuk setiap file
         for(const file of files){
           const formData=new FormData();
           formData.append("file",file);
           formData.append("upload_preset","portal-firebase");
-          // jangan pindahkan showLoading ke dalam loop, agar loadingnya sekali saja
           const res=await fetch(`https://api.cloudinary.com/v1_1/dfojor5pr/image/upload`,{method:"POST",body:formData});
           const data=await res.json();
-          // 4. Jika berhasil, masukkan URL ke dalam array
-          if(data.secure_url) {
-            imageUrls.push(data.secure_url);
-          }
+          if(data.secure_url) imageUrls.push(data.secure_url);
         }
         showLoading(false);
       }
 
-      // 5. Ubah 'imageUrl' menjadi 'images' dengan isi array imageUrls
       const payload={title,category,content,status,slug,images:imageUrls,createdAt:serverTimestamp(),author:auth.currentUser.email};
 
       try{
         if(EDIT_ID){
-            // Saat edit, payload juga menggunakan 'images', menimpa data gambar lama
             await updateDoc(doc(db,"posts",EDIT_ID),payload);
         }
         else{
@@ -313,6 +323,22 @@
         showModal("Konten berhasil disimpan.");
         resetForm();reloadList();
       }catch(err){showModal("Gagal menyimpan: "+err.message);}
+    }
+
+    // ===== 🔎 SEARCH ADMIN: judul + isi (termasuk kategori Peraturan) =====
+    const searchAdmin=document.getElementById("searchAdmin");
+    searchAdmin.addEventListener("keyup", applyAdminSearchFilter);
+
+    function applyAdminSearchFilter(){
+      const q=(searchAdmin.value||"").trim().toLowerCase();
+      const rows=[...document.querySelectorAll("#tbody tr")];
+      if(!q){ rows.forEach(r=>r.style.display=""); return; }
+      rows.forEach(r=>{
+        const judulCell=r.querySelector("td[data-label='Judul']");
+        const titleText=(judulCell?.querySelector("strong")?.textContent||"").toLowerCase();
+        const contentText=(judulCell?.querySelector(".hidden-content")?.textContent||"").toLowerCase();
+        r.style.display = (titleText.includes(q) || contentText.includes(q)) ? "" : "none";
+      });
     }
   </script>
 </body>
